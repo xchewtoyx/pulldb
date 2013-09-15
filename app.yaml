@@ -1,9 +1,15 @@
-application: pulldb
+application: chewtoy-pulldb-app
 version: 1
 runtime: python27
 api_version: 1
 threadsafe: true
 
 handlers:
-- url: /.*
+- url: /
   script: pulldb.application
+- url: /gb/.*
+  script: guestbook.application
+
+libraries:
+- name: webapp2
+  version: latest
