@@ -7,6 +7,8 @@ threadsafe: true
 handlers:
 - url: /
   script: pulldb.application
+- url: /bootstrap
+  static_dir: bootstrap
 - url: /gb/.*
   script: guestbook.application
 
