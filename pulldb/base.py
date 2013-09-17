@@ -5,12 +5,16 @@ from google.appengine.api import users
 import jinja2
 import webapp2
 
-JINJA_ENVIRONMENT = jinja2.Environment(
-  loader=jinja2.FileSystemLoader(
-    os.path.join(os.path.dirname(__file__), 'template')),
-  extensions=['jinja2.ext.autoescape'])
+from pulldb import util
 
 class BaseHandler(webapp2.RequestHandler):
+  def __init__(self, *args, **kwargs):
+    super(BaseHandler, self).__init__(*args, **kwargs)
+    self.templates = jinja2.Environment(
+      loader=jinja2.FileSystemLoader(
+        os.path.join(util.AppRoot(), 'template')),
+      extensions=['jinja2.ext.autoescape'])
+  
   def get_user_info(self):
     user = users.get_current_user()
     if user:
@@ -27,16 +31,3 @@ class BaseHandler(webapp2.RequestHandler):
       }
     return user_info
 
-
-class MainPage(BaseHandler):
-  def get(self):
-    template_values = {
-    }
-    template_values.update(self.get_user_info())
-    template = JINJA_ENVIRONMENT.get_template('index.html')
-    self.response.write(template.render(template_values))
-
-
-application = webapp2.WSGIApplication([
-    ('/', MainPage),
-], debug=True)
