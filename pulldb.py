@@ -10,20 +10,29 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     os.path.join(os.path.dirname(__file__), 'template')),
   extensions=['jinja2.ext.autoescape'])
 
-class MainPage(webapp2.RequestHandler):
-  def get(self):
-    if users.get_current_user():
-      url = users.create_logout_url(self.request.uri)
-      url_linktext = 'Logout'
+class BaseHandler(webapp2.RequestHandler):
+  def get_user_info(self):
+    user = users.get_current_user()
+    if user:
+      user_info = {
+        'user_info_url': users.create_logout_url(self.request.uri),
+        'user_info_text': 'Logout',
+        'user_info_name': user.nickname(),
+      }
     else:
-      url = users.create_login_url(self.request.uri)
-      url_linktext = 'Login'
+      user_info = {
+        'user_info_url': users.create_login_url(self.request.uri),
+        'user_info_text': 'Login',
+        'user_info_name': None,
+      }
+    return user_info
 
+
+class MainPage(BaseHandler):
+  def get(self):
     template_values = {
-      'url': url,
-      'url_linktext': url_linktext,
     }
-
+    template_values.update(self.get_user_info())
     template = JINJA_ENVIRONMENT.get_template('index.html')
     self.response.write(template.render(template_values))
 
