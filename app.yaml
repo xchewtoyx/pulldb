@@ -5,12 +5,15 @@ api_version: 1
 threadsafe: true
 
 handlers:
-- url: /
-  script: pulldb.application
 - url: /bootstrap
   static_dir: bootstrap
-- url: /gb/.*
-  script: guestbook.application
+- url: /static
+  static_dir: static
+- url: /favicon.ico
+  static_files: static/pulldb.png
+  upload: static/pulldb.png
+- url: /
+  script: pulldb.application
 
 libraries:
 - name: webapp2
