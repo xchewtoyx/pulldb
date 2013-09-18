@@ -16,11 +16,11 @@ class Setting(ndb.Model):
 
 class MainPage(BaseHandler):
   def get(self):
-    template_values = {
+    template_values = self.base_template_values()
+    template_values.update({
       'comicvine_api_key': Setting.query(
         Setting.name == 'comicvine_api_key').get(),
-    }
-    template_values.update(self.get_user_info())
+    })
     template = self.templates.get_template('admin.html')
     self.response.write(template.render(template_values))
 
