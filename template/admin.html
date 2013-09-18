@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+{% autoescape true %}
+    <div class='container'>
+      Application settings:
+    </div>
+
+    <form action="/admin/settings" method="post">
+      <div class="container">
+	<div>Comicvine API Key:</div>
+	<div>
+	  <input type="text" name="comicvine_api_key" 
+		 value="{{ comicvine_api_key.value }}" />
+	</div>
+      </div>
+      <div class="container">
+	<div></div>
+	<div><input type="submit" value="Save Settings" /></div>
+      </div>
+    </form>
+{% endautoescape %}
+{% endblock %}
