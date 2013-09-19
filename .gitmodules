@@ -1,4 +1,3 @@
-[submodule "pycomicvine"]
-	path = pycomicvine
+[submodule "site-packages/pycomicvine"]
+	path = site-packages/pycomicvine
 	url = git@github.com:xchewtoyx/pycomicvine.git
-        branch = pulldb-live
