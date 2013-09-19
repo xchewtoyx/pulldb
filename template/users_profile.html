@@ -1,0 +1,15 @@
+{% extends "users.html" %}
+{% block title %}User Profile{% endblock %}
+{% block content %}
+      <span id="signinButton">
+	<span
+	   class="g-signin"
+	   data-callback="signinCallback"
+	   data-clientid="462995942151.apps.googleusercontent.com"
+	   data-cookiepolicy="single_host_origin"
+	   data-requestvisibleactions="http://schemas.google.com/AddActivity"
+	   data-scope="https://www.googleapis.com/auth/plus.login 
+		       https://www.googleapis.com/auth/userinfo.email">
+	</span>
+      </span>
+{% endblock %}

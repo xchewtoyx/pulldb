@@ -38,10 +38,11 @@
           </ul>
 	  <p class="navbar-text pull-right">
 	    {% if user_info_name %}
-	    Signed in as: {{ user_info_name }} 
+	    Signed in as: <a href="/users/me">{{ user_info_name }}</a>
+	    {% else %}
+            <a class="navbar-link" href="{{user_info_url}}">
+              {{ user_info_text }}</a>
 	    {% endif %}
-	    <a class="navbar-link" href="{{user_info_url}}">
-	      {{ user_info_text }}</a>
 	  </p>
         </div><!--/.nav-collapse -->
       </div>
@@ -60,6 +61,15 @@
     <!-- Include all compiled plugins (below), or include individual files 
 	 as needed -->
     <script src="/bootstrap/js/bootstrap.min.js"></script>
-
+    <!-- Google+ Login API code -->
+    <script type="text/javascript">
+      (function() {
+      var po = document.createElement('script'); 
+      po.type = 'text/javascript'; po.async = true;
+      po.src = 'https://apis.google.com/js/client:plusone.js';
+      var s = document.getElementsByTagName('script')[0]; 
+      s.parentNode.insertBefore(po, s);
+     })();
+    </script>
   </body>
 </html>
