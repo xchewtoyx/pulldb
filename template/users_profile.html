@@ -1,6 +1,8 @@
 {% extends "users.html" %}
 {% block title %}User Profile{% endblock %}
 {% block content %}
+<div class="well">Welcome {{ user.nickname }}</div>
+<div class="well">
       <span id="signinButton">
 	<span
 	   class="g-signin"
@@ -12,4 +14,5 @@
 		       https://www.googleapis.com/auth/userinfo.email">
 	</span>
       </span>
+</div>
 {% endblock %}
