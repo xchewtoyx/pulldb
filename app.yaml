@@ -19,7 +19,7 @@ handlers:
   script: pulldb.volumes.app
   login: required
 - url: /
-  script: pulldb.application
+  script: pulldb.index.app
 
 libraries:
 - name: webapp2
