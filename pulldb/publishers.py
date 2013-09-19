@@ -14,7 +14,8 @@ class Publisher(ndb.Model):
 def fetch_or_store(identifier, publisher):
   publisher_key = Publisher.query(Publisher.identifier==identifier).get()
   if not publisher_key:
-    publisher_key = Publisher(identifier=publisher.id, name=publisher.name,
-                              image=publisher.image['tiny_url'])
+    publisher_key = Publisher(identifier=publisher.id, name=publisher.name)
+    if publisher.image:
+      publisher_key.image=publisher.image.get('tiny_url')
     publisher_key.put()
   return publisher_key
