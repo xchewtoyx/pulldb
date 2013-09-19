@@ -43,7 +43,7 @@ class Settings(BaseHandler):
     self.redirect('/admin')
 
 def get_setting(name):
-  value = Session.query(Setting.name==name).get().value
+  value = Setting.query(Setting.name==name).get().value
   return value
 
 app = webapp2.WSGIApplication([
