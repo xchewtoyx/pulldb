@@ -7,16 +7,23 @@
     </div>
 
     <form action="/admin/settings" method="post">
-      <div class="container">
-	<div>Comicvine API Key:</div>
-	<div>
+      <div class="row container">
+	<div class="col-m-3">Comicvine API Key:</div>
+	<div class="col-m-9">
 	  <input type="text" name="comicvine_api_key" 
 		 value="{{ comicvine_api_key.value }}" />
 	</div>
       </div>
-      <div class="container">
-	<div></div>
-	<div><input type="submit" value="Save Settings" /></div>
+      <div class="row container">
+	<div class="col-m-3">Session Store Key:</div>
+	<div class="col-m-9">
+	  <input type="text" name="session_store_key" 
+		 value="{{ session_store_key.value }}" />
+	</div>
+      </div>
+      <div class="row container">
+	<div class="col-m-3"></div>
+	<div class="col-m-9"><input type="submit" value="Save Settings" /></div>
       </div>
     </form>
 {% endautoescape %}
