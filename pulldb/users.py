@@ -19,7 +19,6 @@ class User(ndb.Model):
   image = ndb.StringProperty()
   nickname = ndb.StringProperty()
   oauth_token = ndb.StringProperty()
-  publisher = ndb.KeyProperty(key=Publisher)
 
 class Profile(session.SessionHandler):
   def get(self):
