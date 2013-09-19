@@ -35,7 +35,7 @@ class BaseHandler(webapp2.RequestHandler):
 
   def base_template_values(self):
     template_values = {
-      'path': self.request.path,
+      'url_path': self.request.path,
     }
     template_values.update(self.get_user_info())
     return template_values

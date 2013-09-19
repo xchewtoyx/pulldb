@@ -24,11 +24,14 @@
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
 	    {% macro navlink(name, link) -%}
-	    <li{% if link == path %} class="active"{% endif %}>
+	    <li{% if name == active %} class="active"{% endif %}>
 	      <a href="{{ link }}">{{ name }}</a>
 	    </li>
 	    {%- endmacro %}
             {{ navlink('Home', '/') }}
+	    {% if user_info_name %}
+	    {{ navlink('Volumes', '/volumes') }}
+	    {% endif %}
 	    {% if user_is_admin %}
             {{ navlink('Admin', '/admin') }}
 	    {% endif %}

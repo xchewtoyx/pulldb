@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "volumes.html" %}
 {% block title %}Volume Search{% endblock %}
 {% block content %}
 <div class="row content">
@@ -13,6 +13,7 @@
 </div>
 <div class="row content">
   {% for result in results %}
+    {% if result %}
   <div class="col-md-3">
     <h1>{{ result.name }} ({{ result.start_year }})</h1>
     <img width="75%" height="auto" src="{{ result.image.small_url }}" />
@@ -21,6 +22,7 @@
     {% endif %}
     <p><a href="{{ result.site_detail_url }}">View on comicvine...</a>
   </div>
+    {% endif %}
   {% endfor %}
 </div>
 {% endif %}
