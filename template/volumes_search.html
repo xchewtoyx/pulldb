@@ -7,4 +7,21 @@
     <input type="submit" name="Search" />
   </form>
 </div>
+{% if results %}
+<div class="row content">
+  <p>Displaying {{ results_count }} results...</p>
+</div>
+<div class="row content">
+  {% for result in results %}
+  <div class="col-md-3">
+    <h1>{{ result.name }} ({{ result.start_year }})</h1>
+    <img width="75%" height="auto" src="{{ result.image.small_url }}" />
+    {% if result.deck %}
+    <p>{{ result.deck }}</p>
+    {% endif %}
+    <p><a href="{{ result.site_detail_url }}">View on comicvine...</a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 {% endblock %}

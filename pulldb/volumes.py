@@ -27,11 +27,19 @@ class MainPage(BaseHandler):
 class Search(BaseHandler):
   def get(self):
     pycomicvine.api_key = Setting.query(
-      Setting.name == 'comicvine_api_key').get()
+      Setting.name == 'comicvine_api_key').get().value
     query = self.request.get('q')
+    results = []
+    if query:
+      results = pycomicvine.Volumes.search(
+        query=query, field_list=[
+          'id', 'name', 'start_year', 'count_of_issues',
+          'deck', 'image', 'site_detail_url', 'publisher'])
     template_values = self.base_template_values()
     template_values.update({
         'query': query,
+        'results': results,
+        'results_count': len(results),
     })
     template = self.templates.get_template('volumes_search.html')
     self.response.write(template.render(template_values))
@@ -40,3 +48,4 @@ app = webapp2.WSGIApplication([
     ('/volumes', MainPage),
     ('/volumes/search', Search),
 ], debug=True)
+
