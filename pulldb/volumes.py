@@ -71,8 +71,9 @@ def fetch_or_store(comicvine_volume):
         issue_count=comicvine_volume.count_of_issues, 
         site_detail_url=comicvine_volume.site_detail_url,
         start_year=comicvine_volume.start_year,
-        image=comicvine_volume.image['small_url'],
         publisher=publisher)
+      if comicvine_volume.image:
+        volume.image = comicvine_volume.image.get(['small_url'])
       volume.put()
     volume_key = volume.key
   else:
