@@ -12,9 +12,12 @@ handlers:
 - url: /favicon.ico
   static_files: static/pulldb.png
   upload: static/pulldb.png
-- url: /admin($|/(.*))
+- url: /admin($|/.*)
   script: pulldb.admin.app
   login: admin
+- url: /volumes($|/.*)
+  script: pulldb.volumes.app
+  login: required
 - url: /
   script: pulldb.application
 
