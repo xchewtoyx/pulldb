@@ -13,39 +13,37 @@
 </div>
 <div class="row content">
   {% for result in results %}
-    {% if result %}
+  {% if result %}
   <div class="col-md-3">
     <div class="row"> 
       <div class="col-md-12">
-	<h2>{{ result.name }}</h2>
+	<h2>{{ result.volume.name }}</h2>
       </div>
     </div>
     <div class="row">
       <div class="col-md-12">
-	<img width="75%" height="auto" src="{{ result.image.small_url }}" />
+	<img width="75%" height="auto" src="{{ result.volume.image }}" />
       </div>
     </div>
     <div class="row">
       <div class="col-md-9">
 	<div>
 	  {% if result.publisher %}
-	  <img src="{{ result.publisher.image.tiny_url }}" />
+	  <img src="{{ result.publisher.image }}" />
 	  {{ result.publisher.name }}
 	  {% endif %}
 	</div>
       </div>
-      <div class="col-md-3">{{ result.start_year }}</div>
+      <div class="col-md-3">{{ result.volume.start_year }}</div>
     </div>
     <div class="row">
-      <div class="col-md-12">
-	{% if result.description %}
-	<p>{{ result.description }}</p>
-      </div>
+      <div class="col-md-12">{{ result.volume.issue_count }} issues.</div>
     </div>
-    {% endif %}
-    <p><a href="{{ result.site_detail_url }}">View on comicvine...</a>
+    <div class="row">
+      <p><a href="{{ result.volume.site_detail_url }}">View on comicvine...</a>
+    </div>
   </div>
-    {% endif %}
+  {% endif %}
   {% endfor %}
 </div>
 {% endif %}
