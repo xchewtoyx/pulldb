@@ -40,23 +40,3 @@ class BaseHandler(webapp2.RequestHandler):
     }
     template_values.update(self.get_user_info())
     return template_values
-
-class ConfiguredSession(sessions.SessionStore):
-  def __init__(self):
-    config = {
-      'secret_key': admin.get_setting('session_store_key'),
-    }
-    super(ConfiguredSession, self).__init__(config=config)
-
-class SessionHandler(BaseHandler):
-  def dispatch(self):
-    self.session_store = sessions.get_store(factory=ConfiguredSession,
-                                            request=self.request)
-    try:
-      webapp2.RequestHandler.dispatch(self)
-    finally:
-      self.session_store.save_sessions(self.response)
-
-  @webapp2.cached_property
-  def session(self):
-    return self.session_store.get_session()
