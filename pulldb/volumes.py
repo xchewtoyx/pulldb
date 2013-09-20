@@ -23,6 +23,25 @@ class Volume(ndb.Model):
   site_detail_url = ndb.StringProperty()
   start_year = ndb.IntegerProperty()
 
+def volume_key(comicvine_volume):
+  key = None
+  if comicvine_volume:
+    volume = Volume.query(Volume.identifier==comicvine_volume.id).get()
+    if not volume:
+      publisher_key = publishers.publisher_key(comicvine_volume.publisher)
+      volume = Volume(
+        identifier=comicvine_volume.id, 
+        name=comicvine_volume.name,
+        issue_count=comicvine_volume.count_of_issues, 
+        site_detail_url=comicvine_volume.site_detail_url,
+        start_year=comicvine_volume.start_year,
+        publisher=publisher_key)
+      if comicvine_volume.image:
+        volume.image = comicvine_volume.image.get('small_url')
+      volume.put_async()
+    key = volume.key
+  return key
+
 class MainPage(BaseHandler):
   def get(self):
     template_values = self.base_template_values()
@@ -32,7 +51,7 @@ class MainPage(BaseHandler):
 class Search(BaseHandler):
   def get(self):
     def volume_detail(comicvine_volume):
-      volume = fetch_or_store(comicvine_volume).get()
+      volume = volume_key(comicvine_volume).get()
       publisher_key = volume.publisher
       publisher = None
       if publisher_key:
@@ -60,26 +79,6 @@ class Search(BaseHandler):
     template = self.templates.get_template('volumes_search.html')
     self.response.write(template.render(template_values))
 
-def fetch_or_store(comicvine_volume):
-  if comicvine_volume:
-    volume = Volume.query(Volume.identifier==comicvine_volume.id).get()
-    if not volume:
-      publisher = publishers.fetch_or_store(comicvine_volume.publisher) 
-      volume = Volume(
-        identifier=comicvine_volume.id, 
-        name=comicvine_volume.name,
-        issue_count=comicvine_volume.count_of_issues, 
-        site_detail_url=comicvine_volume.site_detail_url,
-        start_year=comicvine_volume.start_year,
-        publisher=publisher)
-      if comicvine_volume.image:
-        volume.image = comicvine_volume.image.get('small_url')
-      volume.put()
-    volume_key = volume.key
-  else:
-    volume_key = None
-  return volume_key
-    
 app = webapp2.WSGIApplication([
     ('/volumes', MainPage),
     ('/volumes/search', Search),

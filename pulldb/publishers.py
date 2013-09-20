@@ -11,7 +11,8 @@ class Publisher(ndb.Model):
   name = ndb.StringProperty()
   image = ndb.StringProperty()
 
-def fetch_or_store(comicvine_publisher):
+def publisher_key(comicvine_publisher):
+  key = None
   if comicvine_publisher:
     publisher = Publisher.query(
       Publisher.identifier==comicvine_publisher.id).get()
@@ -20,8 +21,6 @@ def fetch_or_store(comicvine_publisher):
                             name=comicvine_publisher.name)
       if comicvine_publisher.image:
         publisher.image=comicvine_publisher.image.get('tiny_url')
-      publisher.put()
-    publisher_key = publisher.key
-  else:
-    publisher_key = None
-  return publisher_key
+      publisher.put_async()
+    key = publisher.key
+  return key
