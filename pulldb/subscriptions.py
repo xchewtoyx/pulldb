@@ -30,7 +30,7 @@ class MainPage(base.BaseHandler):
       return {
         'volume': volume,
         'publisher':  volume.publisher.get(),
-        'subscription': subscription,
+        'subscribed': subscription,
       }
       
     results = Subscription.query(ancestor=users.user_key())

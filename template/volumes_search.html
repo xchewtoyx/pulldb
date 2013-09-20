@@ -23,68 +23,8 @@
   {% if loop.index0 % 4 == 0 %}
   <div class="row">
   {% endif %}
+  {% include "volume_panel.html" %}
   {% if result %}
-  <a name="{{ result.volume_key }}"></a>
-  <div class="col-md-3">
-    <div class="panel">
-      <div class="panel-heading">
-	<h3 class="panel-title">{{ result.volume.name }}</h3>
-      </div> <!-- panel-heading -->
-      <div class="panel-body">
-	<div class="row">
-	  <div class="col-md-8">
-	    <img width="80%" height="auto" src="{{ result.volume.image }}" />
-	  </div> <!-- col -->
-	  <div class="col-md-4">
-	    <div class="row">
-	      <div class="col-md-6">
-		<a href="{{ result.volume.site_detail_url }}">
-		  <span class="glyphicon glyphicon-info-sign"></span>
-		</a>
-	      </div> <!-- col -->
-	      <div class="col-md-6">
-		{% if result.subscribed %}
-		<a href="/subscriptions/remove/{{ result.volume_key }}">
-		  <span class="glyphicon glyphicon-heart"></span>
-		</a>
-		{% else %}
-		<a href="/subscriptions/add/{{ result.volume_key }}">
-		  <span class="glyphicon glyphicon-heart-empty"></span>
-		</a>
-		{% endif %}
-	      </div> <!-- col -->
-	    </div> <!-- row -->
-	    <div class="row">
-	      <div class="col-md-6">
-		<span class="glyphicon glyphicon-copyright-mark"></span>
-	      </div>
-	      <div class="col-md-6">
-		{% if result.publisher %}
-		<img src="{{ result.publisher.image }}" />
-		{% endif %}
-	      </div>
-	    </div> <!-- row -->
-	    <div class="row">
-	      <div class="col-md-6">
-		<span class="glyphicon glyphicon-calendar"></span>
-	      </div>
-	      <div class="col-md-6">
-		{{ result.volume.start_year }}
-	      </div>
-	    </div> <!-- row -->
-	    <div class="row">
-	      <div class="col-md-6">
-		<span class="glyphicon glyphicon-book"></span>
-	      </div>
-	      <div class="col-md-6">
-		{{ result.volume.issue_count }}
-	      </div>
-	    </div> <!-- row -->
-	  </div> <!-- col -->
-	</div> <!-- row -->
-      </div> <!-- panel-body -->
-    </div> <!-- panel -->
-  </div> <!-- col -->
   {% endif %}
   {% if loop.index % 4 == 0 or loop.last %}
   </div> <!-- row -->
