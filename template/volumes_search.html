@@ -1,62 +1,95 @@
 {% extends "volumes.html" %}
 {% block title %}Volume Search{% endblock %}
 {% block content %}
-<div class="row content">
+<div class="well">
   <form action="/volumes/search" method="GET">
-    <input type="text" name="q" value="{{ query }}" />
-    <input type="submit" name="Search" />
+    <div class="input-group">
+      <input class="form-control" type="text" name="q" 
+	     value="{{ query }}" />
+      <span class="input-group-btn">
+	<button class="btn btn-default" type="submit">
+	  Search
+	</button>
+      </span>
+    </div>
   </form>
 </div>
 {% if results %}
-<div class="row content">
+<div class="well">
   <p>Displaying {{ results_count }} results...</p>
 </div>
-<div class="row content">
+<div class="well">
   {% for result in results %}
+  {% if loop.index0 % 4 == 0 %}
+  <div class="row">
+  {% endif %}
   {% if result %}
+  <a name="#{{ result.volume_key }}"></a>
   <div class="col-md-3">
-    <a name="#{{ result.volume_key }}"></a>
-    <div class="row"> 
-      <div class="col-md-12">
-	<h2>{{ result.volume.name }}</h2>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-9">
-	<img width="100%" height="auto" src="{{ result.volume.image }}" />
-      </div>
-      <div class="col-md-3">
-	{% if result.subscribed %}
-	<a href="/subscriptions/remove/{{ result.volume_key }}">
-	  <span class="glyphicon glyphicon-heart"></span>
-	</a>
-	{% else %}
-	<a href="/subscriptions/add/{{ result.volume_key }}">
-	  <span class="glyphicon glyphicon-heart-empty"></span>
-	</a>
-	{% endif %}
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-md-9">
-	<div>
-	  {% if result.publisher %}
-	  <img src="{{ result.publisher.image }}" />
-	  {{ result.publisher.name }}
-	  {% endif %}
-	</div>
-      </div>
-      <div class="col-md-3">{{ result.volume.start_year }}</div>
-    </div>
-    <div class="row">
-      <div class="col-md-12">{{ result.volume.issue_count }} issues.</div>
-    </div>
-    <div class="row">
-      <p><a href="{{ result.volume.site_detail_url }}">View on comicvine...</a>
-    </div>
-  </div>
+    <div class="panel">
+      <div class="panel-heading">
+	<h3 class="panel-title">{{ result.volume.name }}</h3>
+      </div> <!-- panel-heading -->
+      <div class="panel-body">
+	<div class="row">
+	  <div class="col-md-8">
+	    <img width="80%" height="auto" src="{{ result.volume.image }}" />
+	  </div> <!-- col -->
+	  <div class="col-md-4">
+	    <div class="row">
+	      <div class="col-md-6">
+		<a href="{{ result.volume.site_detail_url }}">
+		  <span class="glyphicon glyphicon-info-sign"></span>
+		</a>
+	      </div> <!-- col -->
+	      <div class="col-md-6">
+		{% if result.subscribed %}
+		<a href="/subscriptions/remove/{{ result.volume_key }}">
+		  <span class="glyphicon glyphicon-heart"></span>
+		</a>
+		{% else %}
+		<a href="/subscriptions/add/{{ result.volume_key }}">
+		  <span class="glyphicon glyphicon-heart-empty"></span>
+		</a>
+		{% endif %}
+	      </div> <!-- col -->
+	    </div> <!-- row -->
+	    <div class="row">
+	      <div class="col-md-6">
+		<span class="glyphicon glyphicon-copyright-mark"></span>
+	      </div>
+	      <div class="col-md-6">
+		{% if result.publisher %}
+		<img src="{{ result.publisher.image }}" />
+		{% endif %}
+	      </div>
+	    </div> <!-- row -->
+	    <div class="row">
+	      <div class="col-md-6">
+		<span class="glyphicon glyphicon-calendar"></span>
+	      </div>
+	      <div class="col-md-6">
+		{{ result.volume.start_year }}
+	      </div>
+	    </div> <!-- row -->
+	    <div class="row">
+	      <div class="col-md-6">
+		<span class="glyphicon glyphicon-book"></span>
+	      </div>
+	      <div class="col-md-6">
+		{{ result.volume.issue_count }}
+	      </div>
+	    </div> <!-- row -->
+	  </div> <!-- col -->
+	</div> <!-- row -->
+      </div> <!-- panel-body -->
+    </div> <!-- panel -->
+  </div> <!-- col -->
+  {% endif %}
+  {% if loop.index % 4 == 0 or loop.last %}
+  </div> <!-- row -->
   {% endif %}
   {% endfor %}
-</div>
+</div> <!-- well -->
 {% endif %}
 {% endblock %}
