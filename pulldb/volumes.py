@@ -40,7 +40,7 @@ def volume_key(comicvine_volume, create=True):
         publisher=publisher_key)
       if comicvine_volume.image:
         volume.image = comicvine_volume.image.get('small_url')
-      volume.put_async()
+      volume.put()
       key = volume.key
   return key
 

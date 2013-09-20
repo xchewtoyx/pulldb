@@ -37,7 +37,7 @@ def user_key(app_user=users.get_current_user(), create=True):
     logging.info('Adding user to datastore: %s', app_user.nickname())
     user = User(userid=app_user.user_id(), 
                 nickname=app_user.nickname())
-    user.put_async()
+    user.put()
     key = user.key
   return user.key
 

@@ -23,6 +23,6 @@ def publisher_key(comicvine_publisher, create=True):
                             name=comicvine_publisher.name)
       if comicvine_publisher.image:
         publisher.image=comicvine_publisher.image.get('tiny_url')
-      publisher.put_async()
+      publisher.put()
       key = publisher.key
   return key
