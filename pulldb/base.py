@@ -40,3 +40,6 @@ class BaseHandler(webapp2.RequestHandler):
     }
     template_values.update(self.get_user_info())
     return template_values
+
+def create_app(handlers, debug=True, *args, **kwargs):
+  return webapp2.WSGIApplication(handlers, debug=debug, *args, **kwargs)

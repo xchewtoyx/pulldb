@@ -2,9 +2,8 @@
 import logging
 
 from google.appengine.ext import ndb
-import webapp2
 
-from pulldb.base import BaseHandler
+from pulldb import base
 
 class Setting(ndb.Model):
   '''Setting object in datastore.
@@ -14,7 +13,7 @@ class Setting(ndb.Model):
   name = ndb.StringProperty()
   value = ndb.StringProperty()
 
-class MainPage(BaseHandler):
+class MainPage(base.BaseHandler):
   def get(self):
     template_values = self.base_template_values()
     template_values.update({
@@ -26,7 +25,7 @@ class MainPage(BaseHandler):
     template = self.templates.get_template('admin.html')
     self.response.write(template.render(template_values))
 
-class Settings(BaseHandler):
+class Settings(base.BaseHandler):
   def set_key(self, name, value):
     setting_key = Setting.query(Setting.name == name).get()
     if setting_key:
@@ -46,7 +45,7 @@ def get_setting(name):
   value = Setting.query(Setting.name==name).get().value
   return value
 
-app = webapp2.WSGIApplication([
+app = base.create_app([
     ('/admin', MainPage),
     ('/admin/settings', Settings),
-], debug=True)
+])

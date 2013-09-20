@@ -4,9 +4,8 @@ import logging
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
+from pulldb import base
 from pulldb import session
-
-import webapp2 
 
 class User(ndb.Model):
   '''User object in datastore.
@@ -41,6 +40,6 @@ def user_key(app_user=users.get_current_user(), create=True):
     key = user.key
   return user.key
 
-app = webapp2.WSGIApplication([
+app = base.create_app([
     ('/users/me', Profile),
-], debug=True)
+])

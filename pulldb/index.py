@@ -1,13 +1,12 @@
-import webapp2
+# Copyright 2013 Russell Heilling
+from pulldb import base
 
-from pulldb.base import BaseHandler
-
-class MainPage(BaseHandler):
+class MainPage(base.BaseHandler):
   def get(self):
     template_values = self.base_template_values()
     template = self.templates.get_template('index.html')
     self.response.write(template.render(template_values))
 
-app = webapp2.WSGIApplication([
+app = base.create_app([
     ('/', MainPage),
-], debug=True)
+])

@@ -2,12 +2,10 @@
 
 from google.appengine.ext import ndb
 
-import webapp2
-
 import pycomicvine
 
 from pulldb.admin import Setting
-from pulldb.base import BaseHandler
+from pulldb import base
 from pulldb import publishers
 
 class Volume(ndb.Model):
@@ -81,7 +79,7 @@ class Search(BaseHandler):
     template = self.templates.get_template('volumes_search.html')
     self.response.write(template.render(template_values))
 
-app = webapp2.WSGIApplication([
+app = base.create_app([
     ('/volumes', MainPage),
     ('/volumes/search', Search),
-], debug=True)
+])
