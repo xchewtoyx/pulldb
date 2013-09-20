@@ -2,14 +2,7 @@
 from google.appengine.ext import ndb
 
 from pulldb import base
-
-class Setting(ndb.Model):
-  '''Setting object in datastore.
-
-  Holds settings data.
-  '''
-  name = ndb.StringProperty()
-  value = ndb.StringProperty()
+from pulldb.models.admin import Setting
 
 class MainPage(base.BaseHandler):
   def get(self):

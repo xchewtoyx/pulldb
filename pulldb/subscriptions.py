@@ -1,17 +1,13 @@
 # Copyright 2013 Russell Heilling
 
+import logging
+import urlparse
+
 from google.appengine.ext import ndb
 
 from pulldb import base
 from pulldb import users
-
-class Subscription(ndb.Model):
-  '''Subscription object in datastore.
-
-  Holds subscription data. Parent should be User.
-  '''
-  start_date = ndb.DateProperty()
-  volume = ndb.KeyProperty(kind='Volume')
+from pulldb.models.subscriptions import Subscription
 
 def subscription_key(volume_key, create=False):
   key = None
@@ -24,7 +20,7 @@ def subscription_key(volume_key, create=False):
     subscription = Subscription(parent=user, 
                                 volume=volume_key)
     subscription.put()
-    key = user.key
+    key = subscription.key
   return key
 
 class MainPage(base.BaseHandler):
@@ -47,22 +43,34 @@ class MainPage(base.BaseHandler):
     template = self.templates.get_template('subscriptions_list.html')
     self.response.write(template.render(template_values))
 
-
 class AddSub(base.BaseHandler):
-  def post(self):
-    pass
+  def get(self, volume_key):
+    referer = self.request.referer
+    volume = ndb.Key(urlsafe=volume_key)
+    user = users.user_key().get()
+    logging.info(
+      'User %s subscribing to volume %s', user.nickname, volume.get().name
+    )
+    # Add subscription
+    subscription_key(volume, create=True)
+    # redirect to source
+    self.redirect(
+      urlparse.urljoin(referer, '#%s' % volume_key))
 
 class RemoveSub(base.BaseHandler):
-  def post(self):
-    pass
+  def get(self, volume_key):
+    logging.warn('Removal not yet supported.')
+    referer = self.request.referer
+    self.redirect(
+      urlparse.urljoin(referer, '#%s' % volume_key))
 
 class UpdateSub(base.BaseHandler):
   def post(self):
     pass
 
 app = base.create_app([
-    ('/subscriptions', MainPage),
-    ('/subscriptions/add', AddSub),
-    ('/subscriptions/remove', RemoveSub),
-    ('/subscriptions/update', UpdateSub),
+    (r'/subscriptions$', MainPage),
+    (r'/subscriptions/add/([^/]+)', AddSub),
+    (r'/subscriptions/remove/([^/])+', RemoveSub),
+    (r'/subscriptions/update/([^/])+', UpdateSub),
 ])  

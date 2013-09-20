@@ -2,20 +2,10 @@
 import logging
 
 from google.appengine.api import users
-from google.appengine.ext import ndb
 
 from pulldb import base
 from pulldb import session
-
-class User(ndb.Model):
-  '''User object in datastore.
-
-  Holds the email and ID of the users that have a pull-list.
-  '''
-  userid = ndb.StringProperty()
-  image = ndb.StringProperty()
-  nickname = ndb.StringProperty()
-  oauth_token = ndb.StringProperty()
+from pulldb.models.users import User
 
 class Profile(session.SessionHandler):
   def get(self):

@@ -4,7 +4,6 @@ from google.appengine.api import users
 
 import jinja2
 import webapp2
-from webapp2_extras import sessions
 
 from pulldb import util
 

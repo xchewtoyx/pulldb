@@ -1,25 +1,12 @@
 # Copyright 2013 Russell Heilling
 
-from google.appengine.ext import ndb
-
 import pycomicvine
 
-from pulldb.admin import Setting
 from pulldb import base
 from pulldb import publishers
-
-class Volume(ndb.Model):
-  '''Volume object in datastore.
-
-  Holds volume data.
-  '''
-  identifier = ndb.IntegerProperty()
-  image = ndb.StringProperty()
-  issue_count = ndb.IntegerProperty()
-  name = ndb.StringProperty()
-  publisher = ndb.KeyProperty(kind=publishers.Publisher)
-  site_detail_url = ndb.StringProperty()
-  start_year = ndb.IntegerProperty()
+from pulldb import subscriptions
+from pulldb.models.admin import Setting
+from pulldb.models.volumes import Volume
 
 def volume_key(comicvine_volume, create=True):
   key = None
@@ -52,13 +39,19 @@ class Search(base.BaseHandler):
   def get(self):
     def volume_detail(comicvine_volume):
       volume = volume_key(comicvine_volume).get()
+      subscription = False
+      subscription_key = subscriptions.subscription_key(volume.key)
+      if subscription_key:
+        subscription = subscription_key.urlsafe()
       publisher_key = volume.publisher
       publisher = None
       if publisher_key:
         publisher = publisher_key.get()
       return {
+        'volume_key': volume.key.urlsafe(),
         'volume': volume,
         'publisher': publisher,
+        'subscribed': subscription,
       }
 
     pycomicvine.api_key = Setting.query(
