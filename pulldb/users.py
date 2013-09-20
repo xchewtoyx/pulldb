@@ -4,9 +4,7 @@ import logging
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
-from pulldb import base
 from pulldb import session
-from pulldb.publishers import Publisher
 
 import webapp2 
 
@@ -22,18 +20,23 @@ class User(ndb.Model):
 
 class Profile(session.SessionHandler):
   def get(self):
-    user = users.get_current_user()
-    user_key = User.query(User.userid == user.user_id()).get()
-    if not user_key:
-      logging.info('Adding user to datastore: %s', user.nickname())
-      user_key = User(userid=user.user_id(), nickname=user.nickname())
-      user_key.put()
+    app_user = users.get_current_user()
+    user = user_key(app_user).get()
     template_values = self.base_template_values()
     template_values.update({
-        'user': user_key,
+        'user': user,
     })
     template = self.templates.get_template('users_profile.html')
     self.response.write(template.render(template_values))
+
+def user_key(app_user):
+  user = User.query(User.userid == app_user.user_id()).get()
+  if not user:
+    logging.info('Adding user to datastore: %s', app_user.nickname())
+    user = User(userid=app_user.user_id(), 
+                nickname=app_user.nickname())
+    user.put_async()
+  return user.key
 
 app = webapp2.WSGIApplication([
     ('/users/me', Profile),
