@@ -23,11 +23,13 @@ class Volume(ndb.Model):
   site_detail_url = ndb.StringProperty()
   start_year = ndb.IntegerProperty()
 
-def volume_key(comicvine_volume):
+def volume_key(comicvine_volume, create=True):
   key = None
   if comicvine_volume:
     volume = Volume.query(Volume.identifier==comicvine_volume.id).get()
-    if not volume:
+    if volume:
+      key = volume.key
+    elif create:
       publisher_key = publishers.publisher_key(comicvine_volume.publisher)
       volume = Volume(
         identifier=comicvine_volume.id, 
@@ -39,7 +41,7 @@ def volume_key(comicvine_volume):
       if comicvine_volume.image:
         volume.image = comicvine_volume.image.get('small_url')
       volume.put_async()
-    key = volume.key
+      key = volume.key
   return key
 
 class MainPage(BaseHandler):

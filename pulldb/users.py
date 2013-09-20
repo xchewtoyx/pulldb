@@ -28,13 +28,17 @@ class Profile(session.SessionHandler):
     template = self.templates.get_template('users_profile.html')
     self.response.write(template.render(template_values))
 
-def user_key(app_user):
+def user_key(app_user=users.get_current_user(), create=True):
+  key = None
   user = User.query(User.userid == app_user.user_id()).get()
-  if not user:
+  if user:
+    key = user.key
+  elif create:
     logging.info('Adding user to datastore: %s', app_user.nickname())
     user = User(userid=app_user.user_id(), 
                 nickname=app_user.nickname())
     user.put_async()
+    key = user.key
   return user.key
 
 app = webapp2.WSGIApplication([
