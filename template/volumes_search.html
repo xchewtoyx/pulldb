@@ -1,19 +1,7 @@
 {% extends "volumes.html" %}
 {% block title %}Volume Search{% endblock %}
 {% block content %}
-<div class="well">
-  <form action="/volumes/search" method="GET">
-    <div class="input-group">
-      <input class="form-control" type="text" name="q" 
-	     value="{{ query }}" />
-      <span class="input-group-btn">
-	<button class="btn btn-default" type="submit">
-	  Search
-	</button>
-      </span>
-    </div>
-  </form>
-</div>
+{% include "volumes_search_form.html" %}
 {% if results %}
 <div class="well">
   <p>Displaying {{ results_count }} results...</p>
