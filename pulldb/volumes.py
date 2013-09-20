@@ -42,13 +42,13 @@ def volume_key(comicvine_volume, create=True):
       key = volume.key
   return key
 
-class MainPage(BaseHandler):
+class MainPage(base.BaseHandler):
   def get(self):
     template_values = self.base_template_values()
     template = self.templates.get_template('volumes.html')
     self.response.write(template.render(template_values))
 
-class Search(BaseHandler):
+class Search(base.BaseHandler):
   def get(self):
     def volume_detail(comicvine_volume):
       volume = volume_key(comicvine_volume).get()

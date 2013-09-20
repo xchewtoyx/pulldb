@@ -1,6 +1,4 @@
 # Copyright 2013 Russell Heilling
-import logging
-
 from google.appengine.ext import ndb
 
 from pulldb import base
