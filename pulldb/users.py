@@ -21,10 +21,9 @@ class User(ndb.Model):
 class Profile(session.SessionHandler):
   def get(self):
     app_user = users.get_current_user()
-    user = user_key(app_user).get()
     template_values = self.base_template_values()
     template_values.update({
-        'user': user,
+        'user': user_key(app_user).get(),
     })
     template = self.templates.get_template('users_profile.html')
     self.response.write(template.render(template_values))
