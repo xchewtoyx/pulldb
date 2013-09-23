@@ -1,0 +1,21 @@
+<ul class="pagination">
+  {% if page > 1 %}
+  <li>
+    <a href="{{ page_url }}&page={{ page - 1 }}">&laquo;</a>
+  </li>
+  {% else %}
+  <li class="disabled"><span>&laquo;</span></li>
+  {% endif %}
+  {% for page_num in range(page_count) %}
+  <li {% if page_num == page %}class="active"{% endif %}>
+    <a href="{{ page_url }}&page={{ page_num }}">{{ page_num + 1 }}</a>
+  </li>
+  {% endfor %}
+  {% if page+1 < page_count %}
+  <li>
+    <a href="{{ page_url }}&page={{ page + 1 }}">&raquo;</a>
+  </li>
+  {% else %}
+  <li class="disabled"><span>&raquo;</span></li>
+  {% endif %}
+</ul>
