@@ -28,6 +28,7 @@ class MainPage(base.BaseHandler):
     def subscription_detail(subscription):
       volume = subscription.volume.get()
       return {
+        'volume_key': volume.key.urlsafe(),
         'volume': volume,
         'publisher':  volume.publisher.get(),
         'subscribed': subscription,

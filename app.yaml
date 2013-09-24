@@ -15,6 +15,9 @@ handlers:
 - url: /admin($|/.*)
   script: pulldb.admin.app
   login: admin
+- url: /issues($|/.*)
+  script: pulldb.issues.app
+  login: required
 - url: /subscriptions($|/.*)
   script: pulldb.subscriptions.app
   login: required

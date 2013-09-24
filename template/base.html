@@ -30,6 +30,7 @@
 	    {%- endmacro %}
             {{ navlink('Home', '/') }}
 	    {% if user_info_name %}
+	    {{ navlink('Issues', '/issues') }}
 	    {{ navlink('Subscriptions', '/subscriptions') }}
 	    {{ navlink('Volumes', '/volumes') }}
 	    {% endif %}
