@@ -8,6 +8,7 @@ from google.appengine.ext import ndb
 from pulldb import base
 from pulldb import users
 from pulldb.models.subscriptions import Subscription
+from pulldb.models.volumes import Volume
 
 def subscription_key(volume_key, create=False):
   key = None
@@ -34,7 +35,8 @@ class MainPage(base.BaseHandler):
         'subscribed': subscription,
       }
       
-    results = Subscription.query(ancestor=users.user_key())
+    results = Subscription.query(
+      ancestor=users.user_key())
     template_values = self.base_template_values()
     template_values.update({
         'results': (

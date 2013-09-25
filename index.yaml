@@ -15,3 +15,9 @@ indexes:
   properties:
   - name: date
     direction: desc
+
+- kind: Subscription
+  ancestor: yes
+  properties:
+  - name: name
+    direction: desc
