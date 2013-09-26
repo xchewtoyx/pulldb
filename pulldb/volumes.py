@@ -1,5 +1,6 @@
 # Copyright 2013 Russell Heilling
 
+from datetime import datetime
 import logging
 from math import ceil
 
@@ -8,29 +9,37 @@ import pycomicvine
 from pulldb import base
 from pulldb import publishers
 from pulldb import subscriptions
+from pulldb import users
 from pulldb import util
 from pulldb.models.admin import Setting
 from pulldb.models.volumes import Volume
 
 def volume_key(comicvine_volume, create=True):
   key = None
+  user = users.user_key()
   if comicvine_volume:
-    volume = Volume.query(Volume.identifier==comicvine_volume.id).get()
-    if volume:
-      key = volume.key
-    elif create:
+    volume = Volume.query(
+      Volume.identifier==comicvine_volume.id, ancestor=user).get()
+    if create and not volume:
       publisher_key = publishers.publisher_key(comicvine_volume.publisher)
       volume = Volume(
-        identifier=comicvine_volume.id, 
-        name=comicvine_volume.name,
-        issue_count=comicvine_volume.count_of_issues, 
-        site_detail_url=comicvine_volume.site_detail_url,
-        start_year=comicvine_volume.start_year,
-        publisher=publisher_key)
+        parent=user,
+        identifier=comicvine_volume.id,
+        publisher=publisher_key,
+        last_updated=datetime.min,
+      )
+    if not hasattr(volume, 'last_updated') or (
+        comicvine_volume.date_last_updated > volume.last_updated):
+      # Volume is new or has been updated since last
+      volume.name=comicvine_volume.name
+      volume.issue_count=comicvine_volume.count_of_issues
+      volume.site_detail_url=comicvine_volume.site_detail_url
+      volume.start_year=comicvine_volume.start_year
       if comicvine_volume.image:
         volume.image = comicvine_volume.image.get('small_url')
+      volume.last_updated = comicvine_volume.date_last_updated
       volume.put()
-      key = volume.key
+    key = volume.key
   return key
 
 class MainPage(base.BaseHandler):
@@ -70,7 +79,8 @@ class Search(base.BaseHandler):
       results = pycomicvine.Volumes.search(
         query=query, field_list=[
           'id', 'name', 'start_year', 'count_of_issues',
-          'deck', 'image', 'site_detail_url', 'publisher'])
+          'deck', 'image', 'site_detail_url', 'publisher',
+          'date_last_updated'])
     if offset + limit > len(results):
       page_end = len(results)
     else:
