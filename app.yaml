@@ -1,5 +1,5 @@
 application: comic-pull-db
-version: head
+version: stage
 runtime: python27
 api_version: 1
 threadsafe: true
