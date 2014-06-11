@@ -2,6 +2,8 @@
 
 from google.appengine.ext import ndb
 
+from pulldb.models.properties import ImageProperty
+
 class Publisher(ndb.Model):
   '''Publisher object in datastore.
 
@@ -9,5 +11,4 @@ class Publisher(ndb.Model):
   '''
   identifier = ndb.IntegerProperty()
   name = ndb.StringProperty()
-  image = ndb.StringProperty()
-
+  image = ImageProperty()

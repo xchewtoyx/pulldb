@@ -1,6 +1,7 @@
 # Copyright 2013 Russell Heilling
 
 from google.appengine.ext import ndb
+from pulldb.models.properties import ImageProperty
 
 class Issue(ndb.Model):
   '''Issue object in datastore.
@@ -10,7 +11,7 @@ class Issue(ndb.Model):
   identifier = ndb.IntegerProperty()
   pubdate = ndb.DateProperty()
   cover = ndb.BlobProperty()
-  image = ndb.StringProperty()
+  image = ImageProperty()
   issue_number = ndb.StringProperty()
   title = ndb.StringProperty()
   site_detail_url = ndb.StringProperty()
