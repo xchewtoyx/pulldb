@@ -11,3 +11,4 @@ class User(ndb.Model):
   image = ndb.StringProperty()
   nickname = ndb.StringProperty()
   oauth_token = ndb.StringProperty()
+  trusted = ndb.BooleanProperty()
