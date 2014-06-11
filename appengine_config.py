@@ -1,4 +1,7 @@
 import os
+import site
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
+approot = os.path.dirname(__file__)
+sys.path.append(os.path.join(approot, 'lib'))
+site.addsitedir(os.path.join(approot, 'site-packages'))
