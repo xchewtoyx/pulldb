@@ -18,7 +18,7 @@ def subscription_key(volume_key, create=False):
   if subscription:
     key = subscription.key
   elif create:
-    subscription = Subscription(parent=user, 
+    subscription = Subscription(parent=user,
                                 volume=volume_key)
     subscription.put()
     key = subscription.key
@@ -32,9 +32,9 @@ class MainPage(base.BaseHandler):
         'volume_key': volume.key.urlsafe(),
         'volume': volume,
         'publisher':  volume.publisher.get(),
-        'subscribed': subscription,
+        'subscribed': bool(subscription),
       }
-      
+
     results = Subscription.query(
       ancestor=users.user_key())
     template_values = self.base_template_values()
@@ -48,7 +48,6 @@ class MainPage(base.BaseHandler):
 
 class AddSub(base.BaseHandler):
   def get(self, volume_key):
-    referer = self.request.referer
     volume = ndb.Key(urlsafe=volume_key)
     user = users.user_key().get()
     logging.info(
@@ -56,16 +55,23 @@ class AddSub(base.BaseHandler):
     )
     # Add subscription
     subscription_key(volume, create=True)
-    # redirect to source
-    self.redirect(
-      urlparse.urljoin(referer, '#%s' % volume_key))
+    if self.request.get('type') == 'ajax':
+      self.abort(204)
+    else:
+      # redirect to source
+      referer = self.request.referer
+      self.redirect(
+        urlparse.urljoin(referer, '#%s' % volume_key))
 
 class RemoveSub(base.BaseHandler):
   def get(self, volume_key):
     logging.warn('Removal not yet supported.')
-    referer = self.request.referer
-    self.redirect(
-      urlparse.urljoin(referer, '#%s' % volume_key))
+    if self.request.get('type') == 'ajax':
+      self.abort(501)
+    else:
+      referer = self.request.referer
+      self.redirect(
+        urlparse.urljoin(referer, '#%s' % volume_key))
 
 class UpdateSub(base.BaseHandler):
   def post(self):
@@ -76,4 +82,4 @@ app = base.create_app([
     (r'/subscriptions/add/([^/]+)', AddSub),
     (r'/subscriptions/remove/([^/])+', RemoveSub),
     (r'/subscriptions/update/([^/])+', UpdateSub),
-])  
+])

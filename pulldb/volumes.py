@@ -66,7 +66,7 @@ class Search(base.BaseHandler):
           'volume_key': volume.key.urlsafe(),
           'volume': volume,
           'publisher': publisher,
-          'subscribed': subscription,
+          'subscribed': bool(subscription),
         }
       except AttributeError:
         logging.warn('Could not look up volume %r', comicvine_volume)
