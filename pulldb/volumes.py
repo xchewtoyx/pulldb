@@ -71,11 +71,18 @@ class Search(base.BaseHandler):
     pycomicvine.api_key = Setting.query(
       Setting.name == 'comicvine_api_key').get().value
     query = self.request.get('q')
+    volume_id = self.request.get('volume_id')
     page = int(self.request.get('page', 0))
     limit = int(self.request.get('limit', 20))
     offset = page * limit
     results = []
-    if query:
+    if volume_id and volume_id.isdigit():
+      results.append(pycomicvine.Volume(
+        int(volume_id), field_list=[
+          'id', 'name', 'start_year', 'count_of_issues',
+          'deck', 'image', 'site_detail_url', 'publisher',
+          'date_last_updated']))
+    elif query:
       results = pycomicvine.Volumes.search(
         query=query, field_list=[
           'id', 'name', 'start_year', 'count_of_issues',
@@ -85,13 +92,14 @@ class Search(base.BaseHandler):
       page_end = len(results)
     else:
       page_end = offset + limit
-    logging.info('Retrieving results %d-%d / %d', offset, page_end, 
+    logging.info('Retrieving results %d-%d / %d', offset, page_end,
                  len(results))
     results_page = results[offset:page_end]
     template_values = self.base_template_values()
-    
+
     template_values.update({
       'query': query,
+      'volume_id': volume_id,
       'page': page,
       'limit': limit,
       'results': (volume_detail(volume) for volume in results_page),
