@@ -3,6 +3,7 @@
 from datetime import datetime
 import logging
 from math import ceil
+import re
 
 import pycomicvine
 
@@ -51,43 +52,52 @@ class MainPage(base.BaseHandler):
 class Search(base.BaseHandler):
   def get(self):
     def volume_detail(comicvine_volume):
-      volume = volume_key(comicvine_volume).get()
-      subscription = False
-      subscription_key = subscriptions.subscription_key(volume.key)
-      if subscription_key:
-        subscription = subscription_key.urlsafe()
-      publisher_key = volume.publisher
-      publisher = None
-      if publisher_key:
-        publisher = publisher_key.get()
-      return {
-        'volume_key': volume.key.urlsafe(),
-        'volume': volume,
-        'publisher': publisher,
-        'subscribed': subscription,
-      }
+      try:
+        volume = volume_key(comicvine_volume).get()
+        subscription = False
+        subscription_key = subscriptions.subscription_key(volume.key)
+        if subscription_key:
+          subscription = subscription_key.urlsafe()
+        publisher_key = volume.publisher
+        publisher = None
+        if publisher_key:
+          publisher = publisher_key.get()
+        return {
+          'volume_key': volume.key.urlsafe(),
+          'volume': volume,
+          'publisher': publisher,
+          'subscribed': subscription,
+        }
+      except AttributeError:
+        logging.warn('Could not look up volume %r', comicvine_volume)
 
     # TODO(rgh): This should probably be initialised somewhere else
     pycomicvine.api_key = Setting.query(
       Setting.name == 'comicvine_api_key').get().value
     query = self.request.get('q')
-    volume_id = self.request.get('volume_id')
+    volume_ids = self.request.get('volume_ids')
     page = int(self.request.get('page', 0))
     limit = int(self.request.get('limit', 20))
     offset = page * limit
     results = []
-    if volume_id and volume_id.isdigit():
-      results.append(pycomicvine.Volume(
-        int(volume_id), field_list=[
+    if volume_ids:
+      volumes = re.findall(r'(\d+)', volume_ids)
+      logging.debug('Found volume ids: %r', volumes)
+      volume_filter = '|'.join(volumes)
+      logging.debug('filter=id:%s', volume_filter)
+      results.extend(pycomicvine.Volumes(
+        filter="id:%s" % (volume_filter,), field_list=[
           'id', 'name', 'start_year', 'count_of_issues',
           'deck', 'image', 'site_detail_url', 'publisher',
           'date_last_updated']))
+      logging.debug('Found volumes: %r' % results)
     elif query:
-      results = pycomicvine.Volumes.search(
+      results.extend(pycomicvine.Volumes.search(
         query=query, field_list=[
           'id', 'name', 'start_year', 'count_of_issues',
           'deck', 'image', 'site_detail_url', 'publisher',
-          'date_last_updated'])
+          'date_last_updated']))
+      logging.debug('Found volumes: %r' % results)
     if offset + limit > len(results):
       page_end = len(results)
     else:
@@ -99,7 +109,7 @@ class Search(base.BaseHandler):
 
     template_values.update({
       'query': query,
-      'volume_id': volume_id,
+      'volume_ids': volume_ids,
       'page': page,
       'limit': limit,
       'results': (volume_detail(volume) for volume in results_page),

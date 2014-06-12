@@ -14,12 +14,12 @@ class BaseHandler(webapp2.RequestHandler):
       loader=jinja2.FileSystemLoader(
         os.path.join(util.AppRoot(), 'template')),
       extensions=['jinja2.ext.autoescape'])
-  
+
   def get_user_info(self):
     user = users.get_current_user()
     if user:
       user_info = {
-        'user_info_url': users.create_logout_url(self.request.uri),
+        'user_info_url': users.create_logout_url(self.request.path_url),
         'user_info_text': 'Logout',
         'user_info_name': user.nickname(),
         'user_is_admin': users.is_current_user_admin(),
