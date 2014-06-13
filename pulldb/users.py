@@ -18,6 +18,7 @@ class Profile(session.SessionHandler):
     self.response.write(template.render(template_values))
 
 def user_key(app_user=users.get_current_user(), create=True):
+  logging.debug("Looking up user key for: %r", app_user)
   key = None
   user = User.query(User.userid == app_user.user_id()).get()
   if user:
