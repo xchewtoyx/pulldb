@@ -32,6 +32,9 @@ handlers:
 - url: /
   script: pulldb.index.app
 
+builtins:
+- appstats: on
+
 libraries:
 - name: webapp2
   version: latest
