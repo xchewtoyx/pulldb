@@ -8,3 +8,4 @@ class Pull(ndb.Model):
   Holds pulled issue data.  Parent key should be a subscription.
   '''
   issue = ndb.KeyProperty(kind='Issue')
+  read = ndb.BooleanProperty()

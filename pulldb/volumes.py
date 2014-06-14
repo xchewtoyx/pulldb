@@ -5,6 +5,8 @@ import logging
 from math import ceil
 import re
 
+from google.appengine.api import search
+
 import pycomicvine
 
 from pulldb import base
@@ -18,6 +20,7 @@ from pulldb.models.volumes import Volume
 def volume_key(comicvine_volume, create=True):
   key = None
   user = users.user_key()
+  changed = False
   if comicvine_volume:
     volume = Volume.query(
       Volume.identifier==comicvine_volume.id, ancestor=user).get()
@@ -29,6 +32,7 @@ def volume_key(comicvine_volume, create=True):
         publisher=publisher_key,
         last_updated=datetime.min,
       )
+      changed = True
     if not hasattr(volume, 'last_updated') or (
         comicvine_volume.date_last_updated > volume.last_updated):
       # Volume is new or has been updated since last
@@ -40,7 +44,21 @@ def volume_key(comicvine_volume, create=True):
         volume.image = comicvine_volume.image.get('small_url')
       volume.last_updated = comicvine_volume.date_last_updated
       volume.put()
+      changed = True
     key = volume.key
+    if changed:
+      volume_doc = search.Document(
+        doc_id = key.urlsafe(),
+        fields = [
+          search.TextField(name='name', value=volume.name),
+          search.NumberField(name='start_year', value=volume.start_year),
+          search.NumberField(name='volume_id', value=volume.identifier),
+        ])
+      try:
+        index = search.Index(name="volumes")
+        index.put(volume_doc)
+      except search.Error as error:
+        logging.exception('Put failed: %r', error)
   return key
 
 class MainPage(base.BaseHandler):

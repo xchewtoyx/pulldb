@@ -10,7 +10,7 @@ from pulldb.base import BaseHandler
 class JsonModel(json.JSONEncoder):
     def default(self, value):
         if isinstance(value, ndb.Key):
-            value = value.get()
+            value = value.urlsafe()
         if isinstance(value, ndb.Model):
             return value.to_dict()
         if isinstance(value, (datetime, date, time)):

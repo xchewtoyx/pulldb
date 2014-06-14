@@ -7,7 +7,7 @@ from google.appengine.ext import ndb
 
 from pulldb import base
 from pulldb import users
-from pulldb.models.subscriptions import Subscription
+from pulldb.models.subscriptions import Subscription, subscription_context
 from pulldb.models.volumes import Volume
 
 def subscription_key(volume_key, create=False):
@@ -26,22 +26,22 @@ def subscription_key(volume_key, create=False):
 
 class MainPage(base.BaseHandler):
   def get(self):
-    def subscription_detail(subscription):
-      volume = subscription.volume.get()
+    def subscription_detail(result):
+      volume = result['volume']
       return {
         'volume_key': volume.key.urlsafe(),
         'volume': volume,
-        'publisher':  volume.publisher.get(),
-        'subscribed': bool(subscription),
+        'publisher':  result['publisher'],
+        'subscribed': bool(result),
       }
 
-    results = Subscription.query(
-      ancestor=users.user_key())
+    query = Subscription.query(ancestor=users.user_key())
+    results = query.map(subscription_context)
     template_values = self.base_template_values()
     template_values.update({
         'results': (
           subscription_detail(subscription) for subscription in results),
-        'results_count': results.count(),
+        'results_count': query.count(),
     })
     template = self.templates.get_template('subscriptions_list.html')
     self.response.write(template.render(template_values))

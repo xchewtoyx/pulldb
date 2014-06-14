@@ -11,3 +11,13 @@ class Subscription(ndb.Model):
   '''
   start_date = ndb.DateProperty()
   volume = ndb.KeyProperty(kind=volumes.Volume)
+
+@ndb.tasklet
+def subscription_context(subscription):
+    volume = yield subscription.volume.get_async()
+    publisher = yield volume.publisher.get_async()
+    raise ndb.Return({
+        'subscription': subscription,
+        'volume': volume,
+        'publisher': publisher,
+    })

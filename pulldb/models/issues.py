@@ -15,3 +15,4 @@ class Issue(ndb.Model):
   issue_number = ndb.StringProperty()
   title = ndb.StringProperty()
   site_detail_url = ndb.StringProperty()
+  file_path = ndb.StringProperty()

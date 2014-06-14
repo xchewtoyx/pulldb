@@ -15,20 +15,22 @@ handlers:
 - url: /admin($|/.*)
   script: pulldb.admin.app
   login: admin
-- url: /api/.*
-  script: pulldb.api.subscriptions.app
 - url: /issues($|/.*)
   script: pulldb.issues.app
   login: required
 - url: /subscriptions($|/.*)
   script: pulldb.subscriptions.app
   login: required
+- url: /api/subscriptions($|/.*)
+  script: pulldb.api.subscriptions.app
 - url: /users($|/.*)
   script: pulldb.users.app
   login: required
 - url: /volumes($|/.*)
   script: pulldb.volumes.app
   login: required
+- url: /api/volumes($|/.*)
+  script: pulldb.api.volumes.app
 - url: /
   script: pulldb.index.app
 

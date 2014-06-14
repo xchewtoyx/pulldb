@@ -20,5 +20,11 @@ class Volume(ndb.Model):
   publisher = ndb.KeyProperty(kind=publishers.Publisher)
   site_detail_url = ndb.StringProperty()
   start_year = ndb.IntegerProperty()
-  subscribed = ndb.BooleanProperty()
-  subscription_start = ndb.DateTimeProperty()
+
+@ndb.tasklet
+def volume_context(volume):
+    publisher = yield volume.publisher.get_async()
+    raise ndb.Return({
+        'volume': volume,
+        'publisher': publisher,
+    })
