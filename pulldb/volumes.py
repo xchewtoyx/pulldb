@@ -47,13 +47,16 @@ def volume_key(comicvine_volume, create=True):
       changed = True
     key = volume.key
     if changed:
+      document_fields = [
+          search.TextField(name='name', value=volume.name),
+          search.NumberField(name='volume_id', value=volume.identifier),
+      ]
+      if volume.start_year:
+        document_fields.append(
+          search.NumberField(name='start_year', value=volume.start_year))
       volume_doc = search.Document(
         doc_id = key.urlsafe(),
-        fields = [
-          search.TextField(name='name', value=volume.name),
-          search.NumberField(name='start_year', value=volume.start_year),
-          search.NumberField(name='volume_id', value=volume.identifier),
-        ])
+        fields = document_fields)
       try:
         index = search.Index(name="volumes")
         index.put(volume_doc)
