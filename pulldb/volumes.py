@@ -100,24 +100,23 @@ class Search(base.BaseHandler):
     page = int(self.request.get('page', 0))
     limit = int(self.request.get('limit', 20))
     offset = page * limit
-    results = []
     if volume_ids:
       volumes = re.findall(r'(\d+)', volume_ids)
       logging.debug('Found volume ids: %r', volumes)
       volume_filter = '|'.join(volumes)
       logging.debug('filter=id:%s', volume_filter)
-      results.extend(pycomicvine.Volumes(
+      results = pycomicvine.Volumes(
         filter="id:%s" % (volume_filter,), field_list=[
           'id', 'name', 'start_year', 'count_of_issues',
           'deck', 'image', 'site_detail_url', 'publisher',
-          'date_last_updated']))
+          'date_last_updated'])
       logging.debug('Found volumes: %r' % results)
     elif query:
-      results.extend(pycomicvine.Volumes.search(
+      results = pycomicvine.Volumes.search(
         query=query, field_list=[
           'id', 'name', 'start_year', 'count_of_issues',
           'deck', 'image', 'site_detail_url', 'publisher',
-          'date_last_updated']))
+          'date_last_updated'])
       logging.debug('Found volumes: %r' % results)
     if offset + limit > len(results):
       page_end = len(results)
