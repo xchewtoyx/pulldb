@@ -13,7 +13,6 @@ import pycomicvine
 from pulldb import base
 from pulldb import publishers
 from pulldb import subscriptions
-from pulldb import users
 from pulldb import util
 from pulldb.api.volumes import RefreshVolumes
 from pulldb.models.admin import Setting
