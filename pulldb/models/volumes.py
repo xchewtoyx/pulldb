@@ -22,7 +22,7 @@ class Volume(ndb.Model):
   site_detail_url = ndb.StringProperty()
   start_year = ndb.IntegerProperty()
 
-def volume_key(comicvine_volume, create=True):
+def volume_key(comicvine_volume, create=True, reindex=False):
   key = None
   changed = False
   if comicvine_volume:
@@ -51,11 +51,11 @@ def volume_key(comicvine_volume, create=True):
       changed = True
     if changed:
       logging.info('Saving volume updates: %r', comicvine_volume)
-      volume_future = volume.put_async()
+      key = volume.put()
     else:
       key = volume.key
 
-    if changed:
+    if changed or reindex:
       document_fields = [
           search.TextField(name='name', value=volume.name),
           search.NumberField(name='volume_id', value=volume.identifier),
@@ -63,7 +63,6 @@ def volume_key(comicvine_volume, create=True):
       if volume.start_year:
         document_fields.append(
           search.NumberField(name='start_year', value=volume.start_year))
-      key = volume_future.get_result().key
       volume_doc = search.Document(
         doc_id = key.urlsafe(),
         fields = document_fields)

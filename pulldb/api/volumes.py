@@ -18,7 +18,7 @@ def refresh_volume_shard(shard, shard_count, subscription):
     volume = yield subscription.volume.get_async()
     if volume.identifier % shard_count == shard:
         comicvine_volume = comicvine.Volume(volume.identifier)
-        updated_key = volume_key(comicvine_volume, create=False)
+        updated_key = volume_key(comicvine_volume, create=False, reindex=True)
         raise ndb.Return(updated_key)
 
 class GetVolume(OauthHandler):
