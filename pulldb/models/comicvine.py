@@ -1,7 +1,7 @@
 import json
 
 import pycomicvine
-from pycomicvine import Issue, Volume
+from pycomicvine import Issue, Issues, Volume
 from pycomicvine import error
 from pulldb.models.admin import Setting
 

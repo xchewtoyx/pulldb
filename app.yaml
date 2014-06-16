@@ -18,6 +18,11 @@ handlers:
 - url: /issues($|/.*)
   script: pulldb.issues.app
   login: required
+- url: /tasks/issues/.*
+  script: pulldb.issues.app
+  login: admin
+- url: /api/issues($|/.*)
+  script: pulldb.api.issues.app
 - url: /subscriptions($|/.*)
   script: pulldb.subscriptions.app
   login: required
