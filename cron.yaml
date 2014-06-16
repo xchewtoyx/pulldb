@@ -1,0 +1,4 @@
+cron:
+- description: Refresh volues from comicvine daily
+  url: /tasks/volumes/refresh
+  schedule: every 24 hours

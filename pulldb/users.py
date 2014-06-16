@@ -1,6 +1,7 @@
 # Copyright 2013 Russell Heilling
 import logging
 
+from google.appengine.api import oauth
 from google.appengine.api import users
 
 from pulldb import base
@@ -25,7 +26,7 @@ def user_key(app_user=users.get_current_user(), create=True):
     key = user.key
   elif create:
     logging.info('Adding user to datastore: %s', app_user.nickname())
-    user = User(userid=app_user.user_id(), 
+    user = User(userid=app_user.user_id(),
                 nickname=app_user.nickname())
     user.put()
     key = user.key

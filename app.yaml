@@ -29,6 +29,9 @@ handlers:
 - url: /volumes($|/.*)
   script: pulldb.volumes.app
   login: required
+- url: /tasks/volumes/.*
+  script: pulldb.volumes.app
+  login: admin
 - url: /api/volumes($|/.*)
   script: pulldb.api.volumes.app
 - url: /
