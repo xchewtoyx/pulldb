@@ -5,11 +5,14 @@ from urllib import urlencode
 
 from google.appengine.api import memcache
 from google.appengine.api import urlfetch
+from google.appengine.ext import ndb
 
 import pycomicvine
 from pycomicvine import Issue, Issues, Volume
 from pycomicvine import error
 from pulldb.models.admin import Setting
+
+_API = None
 
 class Comicvine(object):
     def __init__(self):
@@ -81,3 +84,6 @@ class Comicvine(object):
 def load():
     pycomicvine.api_key = Setting.query(
       Setting.name == 'comicvine_api_key').get().value
+    if not _API:
+        globals()['_API'] = Comicvine()
+    return _API

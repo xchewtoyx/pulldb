@@ -19,9 +19,9 @@ handlers:
   script: pulldb.issues.app
   login: required
 - url: /tasks/issues/.*
-  script: pulldb.issues.app
+  script: pulldb.api.issues.app
   login: admin
-- url: /api/issues($|/.*)
+- url: /api/issues/.*
   script: pulldb.api.issues.app
 - url: /subscriptions($|/.*)
   script: pulldb.subscriptions.app
@@ -35,9 +35,9 @@ handlers:
   script: pulldb.volumes.app
   login: required
 - url: /tasks/volumes/.*
-  script: pulldb.volumes.app
+  script: pulldb.api.volumes.app
   login: admin
-- url: /api/volumes($|/.*)
+- url: /api/volumes/.*
   script: pulldb.api.volumes.app
 - url: /
   script: pulldb.index.app

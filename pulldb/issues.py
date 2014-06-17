@@ -77,24 +77,7 @@ class IssueList(base.BaseHandler):
     template = self.templates.get_template('issues_list.html')
     self.response.write(template.render(template_values))
 
-class RefreshShard(base.BaseHandler):
-    def get(self):
-      # When run from cron cycle over all issues
-      shard_count=24 * 7
-      shard=datetime.today().hour + 24 * date.today().weekday()
-      comicvine.load()
-      refresh_callback = partial(
-        refresh_issue_shard, int(shard), int(shard_count))
-      query = Subscription.query(projection=('volume',), distinct=True)
-      volume_keys = query.map(refresh_callback)
-      volume_count = sum([1 for volume in volume_keys if volume])
-      issue_count = sum([len(volume) for volume in volume_keys if volume])
-      status = 'Updated %d issues in %d/%d volumes' % (
-        issue_count, volume_count, len(volume_keys))
-      logging.info(status)
-
 app = base.create_app([
   ('/issues', MainPage),
   ('/issues/list/([^/?&]+)', IssueList),
-  ('/tasks/issues/refresh', RefreshShard),
 ])

@@ -27,27 +27,25 @@ class Issue(ndb.Model):
   file_path = ndb.StringProperty()
 
 @ndb.tasklet
-def refresh_issue_shard(shard, shard_count, subscription):
+def refresh_issue_shard(shard, shard_count, subscription, comicvine=None):
   volume = yield subscription.volume.get_async()
   if volume.identifier % shard_count == shard:
-    cv = comicvine.Comicvine()
-    comicvine_volume = cv.fetch_volume(volume.identifier)
+    comicvine_volume = comicvine.fetch_volume(volume.identifier)
     comicvine_issues = comicvine_volume['issues']
     issues = []
     for index in range(0, len(comicvine_issues), 100):
       ids = [str(issue['id']) for issue in comicvine_issues[
         index:min([len(comicvine_issues), index+100])]]
-      issue_page = cv.fetch_issue_batch(ids)
+      issue_page = comicvine.fetch_issue_batch(ids)
       for issue in issue_page:
         issues.append(issue_key(
           issue, volume_key=volume.key, create=True, reindex=True))
     raise ndb.Return(issues)
 
 @ndb.tasklet
-def refresh_issue_volume(volume):
-  cv = comicvine.Comicvine()
+def refresh_issue_volume(volume, comicvine=None):
   try:
-    comicvine_volume = cv.fetch_volume(volume.identifier)
+    comicvine_volume = comicvine.fetch_volume(volume.identifier)
   except httplib.HTTPException as e:
     logging.exception(e)
     return
@@ -63,7 +61,7 @@ def refresh_issue_volume(volume):
         index:min([len(comicvine_issues), index+100])]:
       issue_ids.append(issue['id'])
     try:
-      issue_page = cv.fetch_issue_batch(issue_ids)
+      issue_page = comicvine.fetch_issue_batch(issue_ids)
     except httplib.HTTPException as e:
       logging.exception(e)
       return
@@ -118,26 +116,29 @@ def issue_key(comicvine_issue, volume_key=None, create=True, reindex=False):
       key = issue.key
 
     if changed or reindex:
-      document_fields = [
-          search.TextField(name='title', value=issue.title),
-          search.TextField(name='name', value=issue.name),
-          search.TextField(name='issue_number', value=issue.issue_number),
-          search.NumberField(name='issue_id', value=issue.identifier),
-      ]
-      if isinstance(issue.pubdate, date):
-        document_fields.append(
-          search.DateField(name='pubdate', value=issue.pubdate)
-        )
-      volume_doc = search.Document(
-        doc_id = key.urlsafe(),
-        fields = document_fields)
-      try:
-        index = search.Index(name="issues")
-        index.put(volume_doc)
-      except search.Error as error:
-        logging.exception('Put failed: %r', error)
+      index_issue(key, issue)
 
     return key
+
+def index_issue(key, issue):
+  document_fields = [
+    search.TextField(name='title', value=issue.title),
+    search.TextField(name='name', value=issue.name),
+    search.TextField(name='issue_number', value=issue.issue_number),
+    search.NumberField(name='issue_id', value=issue.identifier),
+  ]
+  if isinstance(issue.pubdate, date):
+    document_fields.append(
+      search.DateField(name='pubdate', value=issue.pubdate)
+    )
+  volume_doc = search.Document(
+    doc_id = key.urlsafe(),
+    fields = document_fields)
+  try:
+    index = search.Index(name="issues")
+    index.put(volume_doc)
+  except search.Error as error:
+    logging.exception('Put failed: %r', error)
 
 @ndb.tasklet
 def issue_context(issue):

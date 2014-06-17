@@ -7,19 +7,12 @@ from google.appengine.api import search
 from google.appengine.ext import ndb
 
 from pulldb import users
-from pulldb.api.base import OauthHandler, JsonModel
+from pulldb.api.base import OauthHandler, TaskHandler, JsonModel
 from pulldb.base import create_app, Route
-from pulldb.models.volumes import Volume, volume_context, volume_key
-from pulldb.models.subscriptions import Subscription
 from pulldb.models import comicvine
-
-@ndb.tasklet
-def refresh_volume_shard(shard, shard_count, subscription):
-    volume = yield subscription.volume.get_async()
-    if volume.identifier % shard_count == shard:
-        comicvine_volume = comicvine.Volume(volume.identifier)
-        updated_key = volume_key(comicvine_volume, create=False, reindex=True)
-        raise ndb.Return(updated_key)
+from pulldb.models.subscriptions import Subscription
+from pulldb.models.volumes import Volume, volume_context, volume_key
+from pulldb.models.volumes import refresh_volume_shard
 
 class GetVolume(OauthHandler):
     def get(self, identifier):
@@ -27,20 +20,26 @@ class GetVolume(OauthHandler):
         results = query.map(volume_context)
         self.response.write(JsonModel().encode(list(results)))
 
-class RefreshVolumes(OauthHandler):
+class RefreshVolumes(TaskHandler):
     def get(self, shard_count=None, shard=None):
         if not shard_count:
             # When run from cron cycle over all issues weekly
             shard_count=7
             shard=date.today().weekday()
-        comicvine.load()
+        cv = comicvine.load()
         refresh_callback = partial(
-            refresh_volume_shard, int(shard), int(shard_count))
+            refresh_volume_shard, int(shard), int(shard_count), comicvine=cv)
         query = Subscription.query(projection=('volume',), distinct=True)
-        volume_keys = query.map(refresh_callback)
-        update_count = sum([1 for volume in volume_keys if volume])
+        volume_ids = query.map(refresh_callback)
+        sharded_ids = [id for id in volume_ids if id]
+        volumes = []
+        for index in range(0, len(sharded_ids), 100):
+            volume_page = sharded_ids[index:min(index+100, len(sharded_ids))]
+            volumes.extend(cv.fetch_volume_batch(volume_page))
+        for comicvine_volume in volumes:
+            volume_key(comicvine_volume, create=False, reindex=True)
         status = 'Updated %d/%d volumes' % (
-            update_count, len(volume_keys))
+            len(sharded_ids), len(volume_ids))
         logging.info(status)
         self.response.write(json.dumps({
             'status': 200,
@@ -50,12 +49,25 @@ class RefreshVolumes(OauthHandler):
 class SearchVolumes(OauthHandler):
     def get(self):
         index = search.Index(name='volumes')
-        volumes = index.search(self.request.get('q'))
-        logging.debug('results: %r', volumes)
-        volume_keys = [
-            ndb.Key(urlsafe=volume.doc_id) for volume in volumes.results]
-        results = ndb.get_multi(volume_keys)
-        self.response.write(JsonModel().encode(list(results)))
+        results = []
+        try:
+            volumes = index.search(self.request.get('q'))
+            logging.debug('results: found %d matches', volumes.number_found)
+            for volume in volumes.results:
+                result = {
+                    'id': volume.doc_id,
+                    'rank': volume.rank,
+                }
+                for field in volume.fields:
+                    result[field.name] = unicode(field.value)
+                results.append(result)
+        except search.Error as e:
+            logging.exception(e)
+        self.response.write(json.dumps({
+            'status': 200,
+            'count': volumes.number_found,
+            'results': results,
+        }))
 
 app = create_app([
     Route(
@@ -69,5 +81,9 @@ app = create_app([
     Route(
         '/api/volumes/search',
         'pulldb.api.volumes.SearchVolumes'
+    ),
+    Route(
+        '/tasks/volumes/refresh',
+        'pulldb.api.volumes.RefreshVolumes'
     ),
 ])

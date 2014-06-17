@@ -5,6 +5,8 @@ import logging
 from google.appengine.api import search
 from google.appengine.ext import ndb
 
+from dateutil.parser import parse as parse_date
+
 from pulldb import publishers
 from pulldb.models.properties import ImageProperty
 
@@ -27,27 +29,32 @@ def volume_key(comicvine_volume, create=True, reindex=False):
   changed = False
   if comicvine_volume:
     volume = Volume.query(
-      Volume.identifier==comicvine_volume.id).get()
+      Volume.identifier==comicvine_volume['id']).get()
     if create and not volume:
       logging.info('Creating volume: %r', comicvine_volume)
-      publisher_key = publishers.publisher_key(comicvine_volume.publisher)
+      publisher = cv.comicvine_volume['publisher']['id']
+      publisher_key = publishers.publisher_key(comicvine_volume['publisher'])
       volume = Volume(
-        identifier=comicvine_volume.id,
+        identifier=comicvine_volume['id'],
         publisher=publisher_key,
         last_updated=datetime.min,
       )
-    logging.debug('last update: %r', comicvine_volume.date_last_updated)
+    if comicvine_volume.get('date_last_updated'):
+      last_updated = parse_date(comicvine_volume['date_last_updated'])
+    else:
+      last_updated = datetime.now()
+    logging.debug('last update: %r', last_updated)
     if not hasattr(volume, 'last_updated') or (
-        comicvine_volume.date_last_updated > volume.last_updated):
+        last_updated > volume.last_updated):
       logging.info('Volume has changes: %r', comicvine_volume)
       # Volume is new or has been info has been updated since last put
-      volume.name=comicvine_volume.name
-      volume.issue_count=comicvine_volume.count_of_issues
-      volume.site_detail_url=comicvine_volume.site_detail_url
-      volume.start_year=comicvine_volume.start_year
-      if comicvine_volume.image:
-        volume.image = comicvine_volume.image.get('small_url')
-      volume.last_updated = comicvine_volume.date_last_updated
+      volume.name=comicvine_volume.get('name')
+      volume.issue_count=comicvine_volume.get('count_of_issues')
+      volume.site_detail_url=comicvine_volume.get('site_detail_url')
+      volume.start_year=comicvine_volume.get('start_year')
+      if comicvine_volume.get('image'):
+        volume.image = comicvine_volume['image'].get('small_url')
+      volume.last_updated = last_updated
       changed = True
     if changed:
       logging.info('Saving volume updates: %r', comicvine_volume)
@@ -56,23 +63,27 @@ def volume_key(comicvine_volume, create=True, reindex=False):
       key = volume.key
 
     if changed or reindex:
-      document_fields = [
-          search.TextField(name='name', value=volume.name),
-          search.NumberField(name='volume_id', value=volume.identifier),
-      ]
-      if volume.start_year:
-        document_fields.append(
-          search.NumberField(name='start_year', value=volume.start_year))
-      volume_doc = search.Document(
-        doc_id = key.urlsafe(),
-        fields = document_fields)
-      try:
-        index = search.Index(name="volumes")
-        index.put(volume_doc)
-      except search.Error as error:
-        logging.exception('Put failed: %r', error)
+      index_volume(key, volume)
+
   logging.debug('Found key %r', key)
   return key
+
+def index_volume(key, volume):
+  document_fields = [
+    search.TextField(name='name', value=volume.name),
+    search.NumberField(name='volume_id', value=volume.identifier),
+  ]
+  if volume.start_year:
+    document_fields.append(
+      search.NumberField(name='start_year', value=volume.start_year))
+  volume_doc = search.Document(
+    doc_id = key.urlsafe(),
+    fields = document_fields)
+  try:
+    index = search.Index(name="volumes")
+    index.put(volume_doc)
+  except search.Error as error:
+    logging.exception('Put failed: %r', error)
 
 @ndb.tasklet
 def volume_context(volume):
@@ -81,3 +92,9 @@ def volume_context(volume):
         'volume': volume,
         'publisher': publisher,
     })
+
+@ndb.tasklet
+def refresh_volume_shard(shard, shard_count, subscription, comicvine):
+    volume = yield subscription.volume.get_async()
+    if volume.identifier % shard_count == shard:
+        raise ndb.Return(volume.identifier)

@@ -2,6 +2,7 @@
 
 from google.appengine.ext import ndb
 
+from pulldb.models import comicvine
 from pulldb.models.properties import ImageProperty
 
 class Publisher(ndb.Model):
@@ -12,3 +13,21 @@ class Publisher(ndb.Model):
   identifier = ndb.IntegerProperty()
   name = ndb.StringProperty()
   image = ImageProperty()
+
+def publisher_key(comicvine_publisher, create=True):
+  key = None
+  if comicvine_publisher:
+    publisher = Publisher.query(
+      Publisher.identifier==comicvine_publisher['id']).get()
+    if publisher:
+      key = publisher.key
+    if not publisher and create:
+      cv = comicvine.Comicvine()
+      comicvine_publisher = cv.fetch_publisher(comicvine_publisher['id'])
+      publisher = Publisher(identifier=comicvine_publisher['id'],
+                            name=comicvine_publisher['name'])
+      if comicvine_publisher.get('image'):
+        publisher.image=comicvine_publisher['image'].get('tiny_url')
+      publisher.put()
+      key = publisher.key
+  return key

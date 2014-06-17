@@ -15,6 +15,7 @@ from pulldb import publishers
 from pulldb import subscriptions
 from pulldb import util
 from pulldb.models.admin import Setting
+from pulldb.models import comicvine
 from pulldb.models.volumes import Volume, volume_key
 
 class MainPage(base.BaseHandler):
@@ -45,9 +46,7 @@ class Search(base.BaseHandler):
       except AttributeError:
         logging.warn('Could not look up volume %r', comicvine_volume)
 
-    # TODO(rgh): This should probably be initialised somewhere else
-    pycomicvine.api_key = Setting.query(
-      Setting.name == 'comicvine_api_key').get().value
+    cv = comicvine.load()
     query = self.request.get('q')
     volume_ids = self.request.get('volume_ids')
     page = int(self.request.get('page', 0))
@@ -56,13 +55,10 @@ class Search(base.BaseHandler):
     if volume_ids:
       volumes = re.findall(r'(\d+)', volume_ids)
       logging.debug('Found volume ids: %r', volumes)
-      volume_filter = '|'.join(volumes)
-      logging.debug('filter=id:%s', volume_filter)
-      results = pycomicvine.Volumes(
-        filter="id:%s" % (volume_filter,), field_list=[
-          'id', 'name', 'start_year', 'count_of_issues',
-          'deck', 'image', 'site_detail_url', 'publisher',
-          'date_last_updated'])
+      results = []
+      for index in range(0, len(volumes), 100):
+        volume_page = volumes[index:min([index+100, len(volumes)])]
+        results.append(cv.fetch_volume_batch(volume_page))
       logging.debug('Found volumes: %r' % results)
     elif query:
       results = pycomicvine.Volumes.search(
@@ -98,9 +94,9 @@ class RefreshVolumes(base.BaseHandler):
       # When run from cron cycle over all issues weekly
       shard_count=7
       shard=date.today().weekday()
-      comicvine.load()
+      cv = comicvine.load()
       refresh_callback = partial(
-        refresh_volume_shard, int(shard), int(shard_count))
+        refresh_volume_shard, int(shard), int(shard_count), comicvine=cv)
       query = Subscription.query(projection=('volume',), distinct=True)
       volume_keys = query.map(refresh_callback)
       update_count = sum([1 for volume in volume_keys if volume])
@@ -111,5 +107,4 @@ class RefreshVolumes(base.BaseHandler):
 app = base.create_app([
   ('/volumes', MainPage),
   ('/volumes/search', Search),
-  ('/tasks/volumes/refresh', RefreshVolumes),
 ])
