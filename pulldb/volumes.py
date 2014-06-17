@@ -14,7 +14,6 @@ from pulldb import base
 from pulldb import publishers
 from pulldb import subscriptions
 from pulldb import util
-from pulldb.api.volumes import RefreshVolumes
 from pulldb.models.admin import Setting
 from pulldb.models.volumes import Volume, volume_key
 
@@ -93,6 +92,21 @@ class Search(base.BaseHandler):
     })
     template = self.templates.get_template('volumes_search.html')
     self.response.write(template.render(template_values))
+
+class RefreshVolumes(base.BaseHandler):
+    def get(self):
+      # When run from cron cycle over all issues weekly
+      shard_count=7
+      shard=date.today().weekday()
+      comicvine.load()
+      refresh_callback = partial(
+        refresh_volume_shard, int(shard), int(shard_count))
+      query = Subscription.query(projection=('volume',), distinct=True)
+      volume_keys = query.map(refresh_callback)
+      update_count = sum([1 for volume in volume_keys if volume])
+      status = 'Updated %d/%d volumes' % (
+        update_count, len(volume_keys))
+      logging.info(status)
 
 app = base.create_app([
   ('/volumes', MainPage),
