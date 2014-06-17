@@ -10,29 +10,11 @@ from pulldb import users
 from pulldb.api.base import OauthHandler, JsonModel
 from pulldb.base import create_app, Route
 from pulldb.models.issues import Issue, issue_key, issue_context
-from pulldb.models.issues import refresh_issue_shard
+from pulldb.models.issues import refresh_issue_shard, refresh_issue_volume
 from pulldb.models.subscriptions import Subscription
 from pulldb.models import comicvine
 from pulldb.models import volumes
 from pulldb.models.volumes import Volume
-
-@ndb.tasklet
-def refresh_issue_volume(volume):
-    comicvine_volume = comicvine.Volume(volume.identifier)
-    comicvine_issues = list(comicvine_volume.issues)
-    issues = []
-    for index in range(0, len(comicvine_issues), 100):
-        ids = '|'.join(
-            [str(issue.id) for issue in comicvine_issues[
-                index:max([len(comicvine_issues), index+100])]])
-        issue_page = comicvine.Issues(
-            filter="id:%s" % ids, field_list=[
-                'id', 'store_date', 'image', 'issue_number', 'name',
-                'site_detail_url', 'cover_date'])
-        for issue in issue_page:
-            issues.append(issue_key(
-                issue, volume_key=volume.key, create=True, reindex=True))
-    raise ndb.Return(issues)
 
 class GetIssue(OauthHandler):
     def get(self, identifier):
