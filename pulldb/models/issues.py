@@ -4,7 +4,6 @@ from dateutil.parser import parse as parse_date
 import logging
 
 from google.appengine.api import search
-from google.appengine.api.urlfetch import HTTPException
 from google.appengine.ext import ndb
 import httplib
 
