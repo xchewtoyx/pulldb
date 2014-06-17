@@ -1,6 +1,6 @@
 # Copyright 2013 Russell Heilling
 
-from datetime import datetime
+from datetime import datetime, date
 import logging
 from math import ceil
 import re
