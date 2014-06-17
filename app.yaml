@@ -23,6 +23,8 @@ handlers:
   login: admin
 - url: /api/issues/.*
   script: pulldb.api.issues.app
+- url: /api/pulls/.*
+  script: pulldb.api.pulls.app
 - url: /subscriptions($|/.*)
   script: pulldb.subscriptions.app
   login: required
