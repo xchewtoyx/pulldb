@@ -33,6 +33,8 @@ class TaskHandler(BaseHandler):
     def dispatch(self):
         self.scope = 'https://www.googleapis.com/auth/userinfo.email'
         user = users.get_current_user()
+        if not user and 'X-Appengine-Cron' in self.request.headers:
+            user = users.User('russell+cron@heilling.net')
         try:
             if not user:
                 user = oauth.get_current_user(self.scope)
