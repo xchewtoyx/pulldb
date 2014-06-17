@@ -31,10 +31,10 @@ def refresh_issue_shard(shard, shard_count, subscription):
   if volume.identifier % shard_count == shard:
     cv = comicvine.Comicvine()
     comicvine_volume = cv.fetch_volume(volume.identifier)
-    comicvine_issues = comicvine_volume.issues
+    comicvine_issues = comicvine_volume['issues']
     issues = []
     for index in range(0, len(comicvine_issues), 100):
-      ids = [str(issue.id) for issue in comicvine_issues[
+      ids = [str(issue['id']) for issue in comicvine_issues[
         index:min([len(comicvine_issues), index+100])]]
       issue_page = cv.fetch_issue_batch(ids)
       for issue in issue_page:
