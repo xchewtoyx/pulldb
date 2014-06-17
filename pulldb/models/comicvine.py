@@ -7,9 +7,6 @@ from google.appengine.api import memcache
 from google.appengine.api import urlfetch
 from google.appengine.ext import ndb
 
-import pycomicvine
-from pycomicvine import Issue, Issues, Volume
-from pycomicvine import error
 from pulldb.models.admin import Setting
 
 _API = None
@@ -82,9 +79,12 @@ class Comicvine(object):
         response = self._fetch_url(path)
         return response['results']
 
-    def _fetch_batch(self, resource, identifiers):
+    def _fetch_batch(self, resource, identifiers, filter_attr='id'):
         path = self.types[resource]['list_resource_name']
-        filter_string = 'id:%s' % '|'.join(str(id) for id in identifiers)
+        filter_string = '%s:%s' % (
+            filter_attr,
+            '|'.join(str(id) for id in identifiers),
+        )
         response = self._fetch_url(path, filter=filter_string)
         return response['results']
 
@@ -97,8 +97,6 @@ class Comicvine(object):
         return int(count), response['results']
 
 def load():
-    pycomicvine.api_key = Setting.query(
-      Setting.name == 'comicvine_api_key').get().value
     if not _API:
         globals()['_API'] = Comicvine()
     return _API

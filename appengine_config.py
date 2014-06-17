@@ -4,7 +4,6 @@ import sys
 
 approot = os.path.dirname(__file__)
 sys.path.append(os.path.join(approot, 'lib'))
-site.addsitedir(os.path.join(approot, 'site-packages'))
 
 def webapp_add_wsgi_middleware(app):
   from google.appengine.ext.appstats import recording

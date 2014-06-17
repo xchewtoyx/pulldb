@@ -9,6 +9,7 @@ from google.appengine.ext import ndb
 from pulldb import users
 from pulldb.api.base import OauthHandler, TaskHandler, JsonModel
 from pulldb.base import create_app, Route
+from pulldb.models.admin import Setting
 from pulldb.models import comicvine
 from pulldb.models.subscriptions import Subscription
 from pulldb.models.volumes import Volume, volume_context, volume_key
@@ -44,6 +45,24 @@ class RefreshVolumes(TaskHandler):
         self.response.write(json.dumps({
             'status': 200,
             'message': status,
+        }))
+
+class ReshardVolumes(TaskHandler):
+    @ndb.tasklet
+    def reshard_task(self, shards, volume):
+        volume.shard = volume.identifier % shards
+        result = yield volume.put_async()
+        raise ndb.Return(result)
+
+    def get(self):
+        shards_key = Setting.query(Setting.name == 'update_shards_key').get()
+        shards = int(shards_key.value)
+        callback = partial(self.reshard_task, shards)
+        query = Volume.query()
+        results = query.map(callback)
+        self.response.write(json.dumps({
+            'status': 200,
+            'message': '%d volumes resharded' % len(results),
         }))
 
 class SearchVolumes(OauthHandler):
@@ -85,5 +104,9 @@ app = create_app([
     Route(
         '/tasks/volumes/refresh',
         'pulldb.api.volumes.RefreshVolumes'
+    ),
+    Route(
+        '/tasks/volumes/reshard',
+        'pulldb.api.volumes.ReshardVolumes'
     ),
 ])

@@ -9,6 +9,7 @@ from google.appengine.ext import ndb
 from pulldb import users
 from pulldb.api.base import OauthHandler, TaskHandler, JsonModel
 from pulldb.base import create_app, Route
+from pulldb.models.admin import Setting
 from pulldb.models.issues import Issue, issue_key, issue_context
 from pulldb.models.issues import refresh_issue_shard, refresh_issue_volume
 from pulldb.models.subscriptions import Subscription
@@ -29,14 +30,16 @@ class RefreshShard(TaskHandler):
             shard_count=24 * 7
             shard=datetime.today().hour + 24 * date.today().weekday()
         cv = comicvine.load()
-        refresh_callback = partial(
-            refresh_issue_shard, int(shard), int(shard_count), comicvine=cv)
-        query = Subscription.query(projection=('volume',), distinct=True)
-        volume_keys = query.map(refresh_callback)
-        volume_count = sum([1 for volume in volume_keys if volume])
-        issue_count = sum([len(volume) for volume in volume_keys if volume])
-        status = 'Updated %d issues in %d/%d volumes' % (
-            issue_count, volume_count, len(volume_keys))
+        query = Issue.query(Issue.shard==int(shard))
+        comicvine_issues = [issue.identifier for issue in query.fetch()]
+        issues = []
+        for index in range(0, len(comicvine_issues), 100):
+            ids = [str(issue) for issue in comicvine_issues[
+                index:min([len(comicvine_issues), index+100])]]
+            issue_page = cv.fetch_issue_batch(ids)
+        for issue in issue_page:
+            issues.append(issue_key(issue, create=False, reindex=True))
+        status = 'Updated %d issues' % len(issues)
         logging.info(status)
         self.response.write(json.dumps({
             'status': 200,
@@ -57,6 +60,25 @@ class RefreshVolume(OauthHandler):
         self.response.write(json.dumps({
             'status': 200,
             'message': status,
+        }))
+
+
+class ReshardIssues(TaskHandler):
+    @ndb.tasklet
+    def reshard_task(self, shards, issue):
+        issue.shard = issue.identifier % shards
+        result = yield issue.put_async()
+        raise ndb.Return(result)
+
+    def get(self):
+        shards_key = Setting.query(Setting.name == 'update_shards_key').get()
+        shards = int(shards_key.value)
+        callback = partial(self.reshard_task, shards)
+        query = Issue.query()
+        results = query.map(callback)
+        self.response.write(json.dumps({
+            'status': 200,
+            'message': '%d issues resharded' % len(results),
         }))
 
 class SearchIssues(OauthHandler):
@@ -99,5 +121,9 @@ app = create_app([
     Route(
         '/tasks/issues/refresh',
         'pulldb.api.issues.RefreshShard'
+    ),
+    Route(
+        '/tasks/issues/reshard',
+        'pulldb.api.issues.ReshardIssues'
     ),
 ])

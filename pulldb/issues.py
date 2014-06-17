@@ -4,8 +4,6 @@ from functools import partial
 import logging
 from math import ceil
 
-import pycomicvine
-
 from google.appengine.ext import ndb
 
 from pulldb import base
@@ -15,7 +13,7 @@ from pulldb.models.admin import Setting
 from pulldb.models import comicvine
 from pulldb.models.issues import Issue, issue_key, refresh_issue_shard
 from pulldb.models.subscriptions import Subscription
-from pulldb.models.volumes import volume_key
+from pulldb.models import volumes
 
 class MainPage(base.BaseHandler):
   def get(self):
@@ -27,8 +25,8 @@ class IssueList(base.BaseHandler):
   def get(self, volume_key=None):
     def issue_detail(comicvine_issue):
       logging.debug('Creating detail for %r', comicvine_issue)
-      issue = issue_key(comicvine_issue).get()
-      volume = volume_key(comicvine_issue.volume).get()
+      volume = volumes.volume_key(comicvine_issue['volume']).get()
+      issue = issue_key(comicvine_issue, volume_key=volume.key).get()
       # subscription = False
       # subscription_key = subscriptions.subscription_key(volume.key)
       # if subscription_key:
@@ -42,35 +40,33 @@ class IssueList(base.BaseHandler):
       return detail
 
     logging.debug('Listing issues for volume %s', volume_key)
-    comicvine.load()
+    cv = comicvine.load()
     page = int(self.request.get('page', 0))
     limit = int(self.request.get('limit', 20))
     offset = page * limit
     results = []
     if volume_key:
       volume = ndb.Key(urlsafe=volume_key).get()
-      volume_filter = 'volume:%d' % volume.identifier
-      results = pycomicvine.Issues(
-        filter=volume_filter, field_list=[
-          'id', 'title', 'store_date', 'cover_date',
-          'issue_number', 'image', 'site_detail_url', 'volume'])
-    if offset + limit > len(results):
-      page_end = len(results)
-    else:
-      page_end = offset + limit
+      volume_detail = cv.fetch_volume(volume.identifier)
+    issues = volume_detail['issues']
+    issue_count = len(issues)
+    page_end = min([len(issues), offset + limit])
+    issue_ids = []
+    for issue in volume_detail['issues'][offset:page_end]:
+      issue_ids.append(issue['id'])
+    results = cv.fetch_issue_batch(issue_ids)
     logging.info('Retrieving results %d-%d / %d', offset, page_end,
-                 len(results))
-    results_page = results[offset:page_end]
+                 issue_count)
     template_values = self.base_template_values()
 
     template_values.update({
       'page': page,
       'limit': limit,
-      'results': (issue_detail(issue) for issue in results_page),
-      'results_count': len(results),
+      'results': (issue_detail(issue) for issue in results),
+      'results_count': issue_count,
       'page_url': util.StripParam(self.request.url, 'page',
                                   replacement='___'),
-      'page_count': int(ceil(1.0*len(results)/limit)),
+      'page_count': int(ceil(1.0*issue_count/limit)),
     })
     logging.debug('Rendering template %s using values %r',
                   'issues_list.html', template_values)

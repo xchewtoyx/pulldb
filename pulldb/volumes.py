@@ -8,8 +8,6 @@ import re
 from google.appengine.api import search
 from google.appengine.ext import ndb
 
-import pycomicvine
-
 from pulldb import base
 from pulldb import publishers
 from pulldb import subscriptions
@@ -53,12 +51,12 @@ class Search(base.BaseHandler):
     limit = int(self.request.get('limit', 20))
     offset = page * limit
     if volume_ids:
-      volumes = re.findall(r'(\d+)', volume_ids)
+      volumes = [int(id) for id in re.findall(r'(\d+)', volume_ids)]
       logging.debug('Found volume ids: %r', volumes)
       results = []
       for index in range(0, len(volumes), 100):
         volume_page = volumes[index:min([index+100, len(volumes)])]
-        results.append(cv.fetch_volume_batch(volume_page))
+        results.extend(cv.fetch_volume_batch(volume_page))
       results_count = len(results)
       logging.debug('Found volumes: %r' % results)
     elif query:

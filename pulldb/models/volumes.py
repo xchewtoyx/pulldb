@@ -8,6 +8,7 @@ from google.appengine.ext import ndb
 from dateutil.parser import parse as parse_date
 
 from pulldb import publishers
+from pulldb.models import comicvine
 from pulldb.models.properties import ImageProperty
 
 class Volume(ndb.Model):
@@ -23,16 +24,20 @@ class Volume(ndb.Model):
   publisher = ndb.KeyProperty(kind=publishers.Publisher)
   site_detail_url = ndb.StringProperty()
   start_year = ndb.IntegerProperty()
+  shard = ndb.IntegerProperty()
 
 def volume_key(comicvine_volume, create=True, reindex=False):
   key = None
   changed = False
   if comicvine_volume:
+    if 'publisher' not in comicvine_volume:
+      cv = comicvine.load()
+      comicvine_volume = cv.fetch_volume(comicvine_volume['id'])
     volume = Volume.query(
       Volume.identifier==comicvine_volume['id']).get()
     if create and not volume:
       logging.info('Creating volume: %r', comicvine_volume)
-      publisher = cv.comicvine_volume['publisher']['id']
+      publisher = comicvine_volume['publisher']['id']
       publisher_key = publishers.publisher_key(comicvine_volume['publisher'])
       volume = Volume(
         identifier=comicvine_volume['id'],

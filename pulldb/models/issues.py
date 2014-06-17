@@ -25,6 +25,7 @@ class Issue(ndb.Model):
   title = ndb.StringProperty()
   site_detail_url = ndb.StringProperty()
   file_path = ndb.StringProperty()
+  shard = ndb.IntegerProperty()
 
 @ndb.tasklet
 def refresh_issue_shard(shard, shard_count, subscription, comicvine=None):
@@ -75,8 +76,6 @@ def issue_key(comicvine_issue, volume_key=None, create=True, reindex=False):
     key = None
     changed = False
     if comicvine_issue:
-      if isinstance(comicvine_issue, comicvine.Issue):
-        comicvine_issue = comicvine_issue._fields
       issue = Issue.query(Issue.identifier==comicvine_issue['id']).get()
 
     if create and not issue:
@@ -92,9 +91,8 @@ def issue_key(comicvine_issue, volume_key=None, create=True, reindex=False):
     else:
       last_update = datetime.now()
     if not hasattr(issue, 'last_updated') or last_update > issue.last_updated:
-      volume = volume_key.get()
       issue.name='%s %s' % (
-        volume.name,
+        comicvine_issue['volume']['name'],
         comicvine_issue['issue_number'],
       )
       issue.title = comicvine_issue.get('name')
