@@ -9,7 +9,8 @@ from google.appengine.ext import ndb
 from pulldb import users
 from pulldb.api.base import OauthHandler, JsonModel
 from pulldb.base import create_app, Route
-from pulldb.models.issues import Issue, issue_key, refresh_issue_shard
+from pulldb.models.issues import Issue, issue_key, issue_context
+from pulldb.models.issues import refresh_issue_shard
 from pulldb.models.subscriptions import Subscription
 from pulldb.models import comicvine
 from pulldb.models import volumes
@@ -83,7 +84,8 @@ class SearchIssues(OauthHandler):
         logging.debug('results: %r', issues)
         issue_keys = [
             ndb.Key(urlsafe=issue.doc_id) for issue in issues.results]
-        results = ndb.get_multi(issue_keys)
+        query = Issue.query(Issue.key.IN(issue_keys))
+        results = query.map(issue_context)
         self.response.write(JsonModel().encode(list(results)))
 
 app = create_app([

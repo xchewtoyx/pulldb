@@ -104,8 +104,8 @@ def issue_key(comicvine_issue, volume_key=None, create=True, reindex=False):
 
 @ndb.tasklet
 def issue_context(issue):
-    publisher = yield volume.publisher.get_async()
-    raise ndb.Return({
-        'volume': volume,
-        'publisher': publisher,
-    })
+  volume = yield issue.key.parent().get_async()
+  raise ndb.Return({
+    'issue': issue,
+    'volume': volume,
+  })
