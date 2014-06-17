@@ -43,7 +43,6 @@ def volume_key(comicvine_volume, create=True, reindex=False):
       last_updated = parse_date(comicvine_volume['date_last_updated'])
     else:
       last_updated = datetime.now()
-    logging.debug('last update: %r', last_updated)
     if not hasattr(volume, 'last_updated') or (
         last_updated > volume.last_updated):
       logging.info('Volume has changes: %r', comicvine_volume)
@@ -65,7 +64,6 @@ def volume_key(comicvine_volume, create=True, reindex=False):
     if changed or reindex:
       index_volume(key, volume)
 
-  logging.debug('Found key %r', key)
   return key
 
 def index_volume(key, volume):

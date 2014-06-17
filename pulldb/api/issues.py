@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 from functools import partial
 import json
 import logging
