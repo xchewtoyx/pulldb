@@ -9,6 +9,7 @@ from google.appengine.ext import ndb
 
 from pulldb import base
 from pulldb import util
+from pulldb.api.issues import RefreshShard
 from pulldb.models.admin import Setting
 from pulldb.models import comicvine
 from pulldb.models.issues import Issue, issue_key
@@ -77,5 +78,5 @@ class IssueList(base.BaseHandler):
 app = base.create_app([
   ('/issues', MainPage),
   ('/issues/list/([^/?&]+)', IssueList),
-  ('/tasks/issues/refresh', pulldb.api.issues.RefreshShard),
+  ('/tasks/issues/refresh', RefreshShard),
 ])
