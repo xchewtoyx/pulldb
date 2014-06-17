@@ -30,6 +30,10 @@ class Comicvine(object):
                 method = self._fetch_single
             resource = tokens[1]
             return partial(method, resource)
+        if attribute.startswith('search_'):
+            tokens = attribute.split('_')
+            resource = tokens[1]
+            return partial(self._search_resource, resource)
 
     def _fetch_url(self, path, **kwargs):
         query = {
@@ -50,7 +54,7 @@ class Comicvine(object):
         else:
             if reply['error'] == 'OK':
                 logging.debug('Success: %r', reply)
-                return reply['results']
+                return reply
             logging.error('Error: %r', reply)
 
     def _fetch_types(self):
@@ -58,7 +62,8 @@ class Comicvine(object):
         if types:
             types = json.loads(types)
         else:
-            types = self._fetch_url('types')
+            response = self._fetch_url('types')
+            types = response['results']
             if types:
                 type_dict = {}
                 for resource_type in types:
@@ -74,12 +79,22 @@ class Comicvine(object):
         resource_path = self.types[resource]['detail_resource_name']
         resource_type = self.types[resource]['id']
         path = '%s/%s-%d' % (resource_path, resource_type, identifier)
-        return self._fetch_url(path)
+        response = self._fetch_url(path)
+        return response['results']
 
     def _fetch_batch(self, resource, identifiers):
         path = self.types[resource]['list_resource_name']
         filter_string = 'id:%s' % '|'.join(str(id) for id in identifiers)
-        return self._fetch_url(path, filter=filter_string)
+        response = self._fetch_url(path, filter=filter_string)
+        return response['results']
+
+    def _search_resource(self, resource, query, **kwargs):
+        path = 'search'
+        response = self._fetch_url(
+            path, query=query, resources=resource, **kwargs)
+        count = response['number_of_total_results']
+        logging.debug('Found %d results', count)
+        return int(count), response['results']
 
 def load():
     pycomicvine.api_key = Setting.query(

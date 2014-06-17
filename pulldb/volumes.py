@@ -59,20 +59,17 @@ class Search(base.BaseHandler):
       for index in range(0, len(volumes), 100):
         volume_page = volumes[index:min([index+100, len(volumes)])]
         results.append(cv.fetch_volume_batch(volume_page))
+      results_count = len(results)
       logging.debug('Found volumes: %r' % results)
     elif query:
-      results = pycomicvine.Volumes.search(
-        query=query, field_list=[
-          'id', 'name', 'start_year', 'count_of_issues',
-          'deck', 'image', 'site_detail_url', 'publisher',
-          'date_last_updated'])
+      results_count, results = cv.search_volume(query, page=page, limit=limit)
       logging.debug('Found volumes: %r' % results)
-    if offset + limit > len(results):
-      page_end = len(results)
+    if offset + limit > results_count:
+      page_end = results_count
     else:
       page_end = offset + limit
     logging.info('Retrieving results %d-%d / %d', offset, page_end,
-                 len(results))
+                 results_count)
     results_page = results[offset:page_end]
     template_values = self.base_template_values()
 
@@ -82,9 +79,9 @@ class Search(base.BaseHandler):
       'page': page,
       'limit': limit,
       'results': (volume_detail(volume) for volume in results_page),
-      'results_count': len(results),
+      'results_count': results_count,
       'page_url': util.StripParam(self.request.url, 'page'),
-      'page_count': int(ceil(1.0*len(results)/limit)),
+      'page_count': int(ceil(1.0*results_count/limit)),
     })
     template = self.templates.get_template('volumes_search.html')
     self.response.write(template.render(template_values))
