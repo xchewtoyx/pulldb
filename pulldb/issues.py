@@ -13,7 +13,7 @@ from pulldb import util
 from pulldb.api.issues import RefreshShard
 from pulldb.models.admin import Setting
 from pulldb.models import comicvine
-from pulldb.models.issues import Issue, issue_key
+from pulldb.models.issues import Issue, issue_key, refresh_issue_shard
 from pulldb.models.volumes import volume_key
 
 class MainPage(base.BaseHandler):

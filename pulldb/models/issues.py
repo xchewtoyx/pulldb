@@ -5,6 +5,7 @@ import logging
 from google.appengine.api import search
 from google.appengine.ext import ndb
 
+from pulldb.models import comicvine
 from pulldb.models.properties import ImageProperty
 from pulldb.models import volumes
 
@@ -22,6 +23,23 @@ class Issue(ndb.Model):
   title = ndb.StringProperty()
   site_detail_url = ndb.StringProperty()
   file_path = ndb.StringProperty()
+
+@ndb.tasklet
+def refresh_issue_shard(shard, shard_count, subscription):
+    volume = yield subscription.volume.get_async()
+    if volume.identifier % shard_count == shard:
+        comicvine_volume = comicvine.Volume(volume.identifier)
+        comicvine_issues = list(comicvine_volume.issues)
+        issues = []
+        for index in range(0, len(comicvine_issues), 100):
+            ids = '|'.join(
+                [str(issue.id) for issue in comicvine_issues[
+                    index:max([len(comicvine_issues), index+100])]])
+            issue_page = comicvine.Issues(filter="id:%s" % ids, all=True)
+            for issue in issue_page:
+                issues.append(issue_key(
+                    issue, volume_key=volume.key, create=True, reindex=True))
+        raise ndb.Return(issues)
 
 def issue_key(comicvine_issue, volume_key=None, create=True, reindex=False):
   key = None
