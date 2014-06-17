@@ -14,6 +14,7 @@ from pulldb.api.issues import RefreshShard
 from pulldb.models.admin import Setting
 from pulldb.models import comicvine
 from pulldb.models.issues import Issue, issue_key, refresh_issue_shard
+from pulldb.models.subscriptions import Subscription
 from pulldb.models.volumes import volume_key
 
 class MainPage(base.BaseHandler):
@@ -89,7 +90,7 @@ class RefreshShard(base.BaseHandler):
       volume_count = sum([1 for volume in volume_keys if volume])
       issue_count = sum([len(volume) for volume in volume_keys if volume])
       status = 'Updated %d issues in %d/%d volumes' % (
-        issue_count, update_count, len(volume_keys))
+        issue_count, volume_count, len(volume_keys))
       logging.info(status)
 
 app = base.create_app([
