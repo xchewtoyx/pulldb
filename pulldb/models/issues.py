@@ -4,7 +4,9 @@ from dateutil.parser import parse as parse_date
 import logging
 
 from google.appengine.api import search
+from google.appengine.api.urlfetch import HTTPException
 from google.appengine.ext import ndb
+import httplib
 
 from pulldb.models import comicvine
 from pulldb.models.properties import ImageProperty
@@ -45,7 +47,11 @@ def refresh_issue_shard(shard, shard_count, subscription):
 @ndb.tasklet
 def refresh_issue_volume(volume):
   cv = comicvine.Comicvine()
-  comicvine_volume = cv.fetch_volume(volume.identifier)
+  try:
+    comicvine_volume = cv.fetch_volume(volume.identifier)
+  except httplib.HTTPException as e:
+    logging.exception(e)
+    return
   comicvine_issues = comicvine_volume['issues']
   issues = []
   logging.debug('Found %d issues: %r',
@@ -57,11 +63,15 @@ def refresh_issue_volume(volume):
     for issue in comicvine_issues[
         index:min([len(comicvine_issues), index+100])]:
       issue_ids.append(issue['id'])
-    issue_page = cv.fetch_issue_batch(issue_ids)
-
+    try:
+      issue_page = cv.fetch_issue_batch(issue_ids)
+    except httplib.HTTPException as e:
+      logging.exception(e)
+      return
     for issue in issue_page:
       issues.append(issue_key(
         issue, volume_key=volume.key, create=True, reindex=True))
+
   raise ndb.Return(issues)
 
 def issue_key(comicvine_issue, volume_key=None, create=True, reindex=False):
