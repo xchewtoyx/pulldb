@@ -11,7 +11,7 @@ from pulldb.models.subscriptions import Subscription, subscription_context
 
 class ListSubs(OauthHandler):
     def get(self):
-        user_key = users.user_key(oauth.get_current_user(self.scope))
+        user_key = users.user_key(self.user)
         query = Subscription.query(ancestor=user_key)
         results = query.map(subscription_context)
         self.response.write(JsonModel().encode(list(results)))
