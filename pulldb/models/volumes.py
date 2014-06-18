@@ -55,7 +55,7 @@ def volume_key(comicvine_volume, create=True, reindex=False):
       volume.name=comicvine_volume.get('name')
       volume.issue_count=comicvine_volume.get('count_of_issues')
       volume.site_detail_url=comicvine_volume.get('site_detail_url')
-      volume.start_year=comicvine_volume.get('start_year')
+      volume.start_year=int(comicvine_volume.get('start_year'))
       if comicvine_volume.get('image'):
         volume.image = comicvine_volume['image'].get('small_url')
       volume.last_updated = last_updated

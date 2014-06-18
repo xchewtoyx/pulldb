@@ -1,5 +1,4 @@
 # Copyright 2013 Russell Heilling
-from datetime import date, datetime
 from functools import partial
 import logging
 from math import ceil
