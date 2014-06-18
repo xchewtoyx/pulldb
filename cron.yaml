@@ -2,6 +2,12 @@ cron:
 - description: Refresh volues from comicvine daily
   url: /tasks/volumes/refresh
   schedule: every 60 minutes
+- description: Reshard new volumes
+  url: /tasks/volumes/reshard
+  schedule: every 2 hours
 - description: Refresh issues hourly
   url: /tasks/issues/refresh
   schedule: every 60 minutes
+- description: Reshard new issues
+  url: /tasks/issues/reshard
+  schedule: every 2 hours
