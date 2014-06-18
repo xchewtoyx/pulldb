@@ -113,6 +113,22 @@ class SearchVolumes(OauthHandler):
             'results': results,
         }))
 
+class Validate(TaskHandler):
+    @ndb.tasklet
+    def drop_invalid(self, volume):
+        if volume.key.id() != str(volume.identifier):
+            deleted = yield volume.key.delete_async()
+            raise ndb.Return(True)
+
+    def get(self):
+        query = Volume.query()
+        results = query.map(self.drop_invalid)
+        deleted = sum(1 for deleted in results if deleted)
+        self.response.write(json.dumps({
+            'status': 200,
+            'deleted': deleted,
+        }))
+
 app = create_app([
     Route(
         '/api/volumes/get/<identifier>',
@@ -131,7 +147,7 @@ app = create_app([
         'pulldb.api.volumes.RefreshVolumes'
     ),
     Route(
-        '/tasks/volumes/reshard',
-        'pulldb.api.volumes.ReshardVolumes'
+        '/tasks/volumes/validate',
+        'pulldb.api.volumes.Validate'
     ),
 ])

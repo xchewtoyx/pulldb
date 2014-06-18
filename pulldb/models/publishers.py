@@ -15,19 +15,24 @@ class Publisher(ndb.Model):
   image = ImageProperty()
 
 def publisher_key(comicvine_publisher, create=True):
-  key = None
-  if comicvine_publisher:
-    publisher = Publisher.query(
-      Publisher.identifier==comicvine_publisher['id']).get()
-    if publisher:
-      key = publisher.key
+    if not comicvine_publisher:
+        return
+    key = ndb.Key(Publisher, str(comicvine_publisher['id']))
+    publisher = key.get()
     if not publisher and create:
-      cv = comicvine.Comicvine()
-      comicvine_publisher = cv.fetch_publisher(comicvine_publisher['id'])
-      publisher = Publisher(identifier=comicvine_publisher['id'],
-                            name=comicvine_publisher['name'])
-      if comicvine_publisher.get('image'):
-        publisher.image=comicvine_publisher['image'].get('tiny_url')
-      publisher.put()
-      key = publisher.key
-  return key
+        if 'image' not in comicvine_publisher:
+            cv = comicvine.Comicvine()
+            comicvine_publisher = cv.fetch_publisher(
+                comicvine_publisher['id'],
+                field_list='id,name,image',
+            )
+        publisher = Publisher(
+            key=key,
+            identifier=comicvine_publisher['id'],
+            name=comicvine_publisher['name']
+        )
+        if comicvine_publisher.get('image'):
+            publisher.image=comicvine_publisher['image'].get('tiny_url')
+        publisher.put()
+
+    return key

@@ -101,6 +101,22 @@ class SearchIssues(OauthHandler):
             'results': results,
         }))
 
+class Validate(TaskHandler):
+    @ndb.tasklet
+    def check_valid(self, issue):
+        if issue.key.id() != str(issue.identifier):
+            deleted = yield issue.key.delete_async()
+            raise ndb.Return(True)
+
+    def get(self):
+        query = Issue.query()
+        results = query.map(self.check_valid)
+        deleted = sum(1 for deleted in results if deleted)
+        self.response.write(json.dumps({
+            'status': 200,
+            'deleted': deleted,
+        }))
+
 app = create_app([
     Route(
         '/api/issues/get/<identifier>',
@@ -125,5 +141,9 @@ app = create_app([
     Route(
         '/tasks/issues/reshard',
         'pulldb.api.issues.ReshardIssues'
+    ),
+    Route(
+        '/tasks/issues/validate',
+        'pulldb.api.issues.Validate'
     ),
 ])

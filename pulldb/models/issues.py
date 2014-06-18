@@ -72,53 +72,59 @@ def refresh_issue_volume(volume, comicvine=None):
 
   raise ndb.Return(issues)
 
-def issue_key(comicvine_issue, volume_key=None, create=True, reindex=False):
-    key = None
+def issue_key(comicvine_issue, volume_key=None, create=True,
+              reindex=False, batch=False):
+    if not comicvine:
+        return
     changed = False
-    if comicvine_issue:
-      issue = Issue.query(Issue.identifier==comicvine_issue['id']).get()
+    key_future = None
+    volume_id = comicvine_issue['volume']['id']
+    issue_id = comicvine_issue['id']
+    key = ndb.Key(volumes.Volume, str(volume_id), Issue, str(issue_id))
+    issue = key.get()
 
     if create and not issue:
-      if not volume_key:
-        volume_key = volumes.volume_key(comicvine_issue['volume'])
-      issue = Issue(
-        parent=volume_key,
-        identifier=comicvine_issue['id'],
-        last_updated=datetime.min
-      )
+        if not volume_key:
+            volume_key = volumes.volume_key(comicvine_issue['volume'])
+        issue = Issue(
+            key = key,
+            identifier=comicvine_issue['id'],
+            last_updated=datetime.min
+        )
     if comicvine_issue.get('date_last_updated'):
-      last_update = parse_date(comicvine_issue['date_last_updated'])
+        last_update = parse_date(comicvine_issue['date_last_updated'])
     else:
-      last_update = datetime.now()
+        last_update = datetime.now()
     if not hasattr(issue, 'last_updated') or last_update > issue.last_updated:
-      issue.name='%s %s' % (
-        comicvine_issue['volume']['name'],
-        comicvine_issue['issue_number'],
-      )
-      issue.title = comicvine_issue.get('name')
-      issue.issue_number = comicvine_issue.get('issue_number', '')
-      issue.site_detail_url = comicvine_issue.get('site_detail_url')
-      if comicvine_issue.get('store_date'):
-        pubdate = parse_date(comicvine_issue.get('store_date'))
-      elif comicvine_issue.get('cover_date'):
-        pubdate = parse_date(comicvine_issue.get('cover_date'))
-      if isinstance(pubdate, date):
-        issue.pubdate=pubdate
-      if 'image' in comicvine_issue:
-        issue.image = comicvine_issue['image'].get('small_url')
-      changed = True
+        issue.name='%s %s' % (
+            comicvine_issue['volume']['name'],
+            comicvine_issue['issue_number'],
+        )
+        issue.title = comicvine_issue.get('name')
+        issue.issue_number = comicvine_issue.get('issue_number', '')
+        issue.site_detail_url = comicvine_issue.get('site_detail_url')
+        if comicvine_issue.get('store_date'):
+            pubdate = parse_date(comicvine_issue.get('store_date'))
+        elif comicvine_issue.get('cover_date'):
+            pubdate = parse_date(comicvine_issue.get('cover_date'))
+        if isinstance(pubdate, date):
+            issue.pubdate=pubdate
+        if 'image' in comicvine_issue:
+            issue.image = comicvine_issue['image'].get('small_url')
+        changed = True
     if changed:
-      logging.info('Saving issue updates: %r', comicvine_issue)
-      key = issue.put()
-    else:
-      key = issue.key
+        logging.info('Saving issue updates: %r', comicvine_issue)
+        if batch:
+            issue.put_async()
+        else:
+            issue.put()
 
-    if changed or reindex:
-      index_issue(key, issue)
+    if not batch and (reindex or changed):
+        index_issue(key, issue)
 
     return key
 
-def index_issue(key, issue):
+def index_issue(key, issue, batch=False):
   document_fields = [
     search.TextField(name='title', value=issue.title),
     search.TextField(name='name', value=issue.name),
@@ -132,6 +138,8 @@ def index_issue(key, issue):
   volume_doc = search.Document(
     doc_id = key.urlsafe(),
     fields = document_fields)
+  if batch:
+    return volume_doc
   try:
     index = search.Index(name="issues")
     index.put(volume_doc)

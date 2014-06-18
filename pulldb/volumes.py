@@ -41,8 +41,9 @@ class Search(base.BaseHandler):
           'publisher': publisher,
           'subscribed': bool(subscription),
         }
-      except AttributeError:
+      except AttributeError as e:
         logging.warn('Could not look up volume %r', comicvine_volume)
+        logging.exception(e)
 
     cv = comicvine.load()
     query = self.request.get('q')

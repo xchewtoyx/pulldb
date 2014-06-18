@@ -7,7 +7,7 @@ from google.appengine.ext import ndb
 
 from dateutil.parser import parse as parse_date
 
-from pulldb import publishers
+from pulldb.models import publishers
 from pulldb.models import comicvine
 from pulldb.models.properties import ImageProperty
 
@@ -26,50 +26,56 @@ class Volume(ndb.Model):
   start_year = ndb.IntegerProperty()
   shard = ndb.IntegerProperty()
 
-def volume_key(comicvine_volume, create=True, reindex=False):
-  key = None
-  changed = False
-  if comicvine_volume:
+def volume_key(comicvine_volume, create=True, reindex=False, batch=False):
+    if not comicvine_volume:
+        return
+    changed = False
+    key = ndb.Key(Volume, str(comicvine_volume['id']))
+    volume = key.get()
     if 'publisher' not in comicvine_volume:
-      cv = comicvine.load()
-      comicvine_volume = cv.fetch_volume(comicvine_volume['id'])
-    volume = Volume.query(
-      Volume.identifier==comicvine_volume['id']).get()
+        if volume:
+            return key
+        else:
+            cv = comicvine.load()
+            comicvine_volume = cv.fetch_volume(comicvine_volume['id'])
     if create and not volume:
-      logging.info('Creating volume: %r', comicvine_volume)
-      publisher = comicvine_volume['publisher']['id']
-      publisher_key = publishers.publisher_key(comicvine_volume['publisher'])
-      volume = Volume(
-        identifier=comicvine_volume['id'],
-        publisher=publisher_key,
-        last_updated=datetime.min,
-      )
+        logging.info('Creating volume: %r', comicvine_volume)
+        publisher = comicvine_volume['publisher']['id']
+        publisher_key = publishers.publisher_key(comicvine_volume['publisher'])
+        volume = Volume(
+            key=key,
+            identifier=comicvine_volume['id'],
+            publisher=publisher_key,
+            last_updated=datetime.min,
+        )
     if comicvine_volume.get('date_last_updated'):
-      last_updated = parse_date(comicvine_volume['date_last_updated'])
+        last_updated = parse_date(comicvine_volume['date_last_updated'])
     else:
-      last_updated = datetime.now()
+        last_updated = datetime.now()
     if not hasattr(volume, 'last_updated') or (
-        last_updated > volume.last_updated):
-      logging.info('Volume has changes: %r', comicvine_volume)
-      # Volume is new or has been info has been updated since last put
-      volume.name=comicvine_volume.get('name')
-      volume.issue_count=comicvine_volume.get('count_of_issues')
-      volume.site_detail_url=comicvine_volume.get('site_detail_url')
-      volume.start_year=int(comicvine_volume.get('start_year'))
-      if comicvine_volume.get('image'):
-        volume.image = comicvine_volume['image'].get('small_url')
-      volume.last_updated = last_updated
-      changed = True
+            last_updated > volume.last_updated):
+        logging.info('Volume has changes: %r', comicvine_volume)
+        # Volume is new or has been info has been updated since last put
+        volume.name=comicvine_volume.get('name')
+        volume.issue_count=comicvine_volume.get('count_of_issues')
+        volume.site_detail_url=comicvine_volume.get('site_detail_url')
+        volume.start_year=int(comicvine_volume.get('start_year'))
+        if comicvine_volume.get('image'):
+            volume.image = comicvine_volume['image'].get('small_url')
+        volume.last_updated = last_updated
+        changed = True
+
     if changed:
-      logging.info('Saving volume updates: %r', comicvine_volume)
-      key = volume.put()
-    else:
-      key = volume.key
+        logging.info('Saving volume updates: %r', comicvine_volume)
+        if batch:
+            volume.put_async()
+        else:
+            volume.put()
 
-    if changed or reindex:
-      index_volume(key, volume)
+    if not batch and (changed or reindex):
+        index_volume(key, volume)
 
-  return key
+    return key
 
 def index_volume(key, volume):
   document_fields = [

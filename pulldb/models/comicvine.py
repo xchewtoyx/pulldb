@@ -72,20 +72,21 @@ class Comicvine(object):
                              namespace='comicvine')
         return types
 
-    def _fetch_single(self, resource, identifier):
+    def _fetch_single(self, resource, identifier, **kwargs):
         resource_path = self.types[resource]['detail_resource_name']
         resource_type = self.types[resource]['id']
         path = '%s/%s-%d' % (resource_path, resource_type, identifier)
-        response = self._fetch_url(path)
+        response = self._fetch_url(path, **kwargs)
         return response['results']
 
-    def _fetch_batch(self, resource, identifiers, filter_attr='id'):
+    def _fetch_batch(
+            self, resource, identifiers, filter_attr='id', **kwargs):
         path = self.types[resource]['list_resource_name']
         filter_string = '%s:%s' % (
             filter_attr,
             '|'.join(str(id) for id in identifiers),
         )
-        response = self._fetch_url(path, filter=filter_string)
+        response = self._fetch_url(path, filter=filter_string, **kwargs)
         return response['results']
 
     def _search_resource(self, resource, query, **kwargs):
