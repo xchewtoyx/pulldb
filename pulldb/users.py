@@ -18,7 +18,9 @@ class Profile(session.SessionHandler):
     template = self.templates.get_template('users_profile.html')
     self.response.write(template.render(template_values))
 
-def user_key(app_user=users.get_current_user(), create=True):
+def user_key(app_user=None, create=True):
+  if not app_user:
+    app_user = users.get_current_user()
   logging.debug("Looking up user key for: %r", app_user)
   key = None
   user = User.query(User.userid == app_user.user_id()).get()

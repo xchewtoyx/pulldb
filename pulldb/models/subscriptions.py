@@ -1,4 +1,5 @@
 # Copyright 2013 Russell Heilling
+from datetime import datetime
 
 from google.appengine.ext import ndb
 
@@ -9,7 +10,7 @@ class Subscription(ndb.Model):
 
   Holds subscription data. Parent should be User.
   '''
-  start_date = ndb.DateProperty()
+  start_date = ndb.DateProperty(default=datetime.min)
   volume = ndb.KeyProperty(kind=volumes.Volume)
 
 @ndb.tasklet
