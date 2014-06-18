@@ -37,8 +37,8 @@ class RefreshShard(TaskHandler):
             ids = [str(issue) for issue in comicvine_issues[
                 index:min([len(comicvine_issues), index+100])]]
             issue_page = cv.fetch_issue_batch(ids)
-        for issue in issue_page:
-            issues.append(issue_key(issue, create=False, reindex=True))
+            for issue in issue_page:
+                issues.append(issue_key(issue, create=False, reindex=True))
         status = 'Updated %d issues' % len(issues)
         logging.info(status)
         self.response.write(json.dumps({
