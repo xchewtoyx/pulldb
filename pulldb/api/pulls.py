@@ -58,7 +58,7 @@ class AddPulls(OauthHandler):
             else:
                 logging.info('Unable to add pull, issue %s not found' % (
                     issue_id))
-                results['failed'].append(issue_key.id())
+                results['failed'].append(issue_id)
         # prefetch for efficiency
         ndb.get_multi(pull for issue, pull in candidates)
         new_pulls = []
