@@ -3,6 +3,7 @@ from datetime import date, datetime
 from functools import partial
 import json
 import logging
+import math
 
 from google.appengine.api import search
 from google.appengine.ext import ndb
@@ -12,7 +13,7 @@ from pulldb.api.base import OauthHandler, TaskHandler, JsonModel
 from pulldb.base import create_app, Route
 from pulldb.models.admin import Setting
 from pulldb.models import comicvine
-from pulldb.models.issues import Issue
+from pulldb.models import issues
 from pulldb.models.subscriptions import Subscription
 from pulldb.models import volumes
 from pulldb.models.volumes import Volume, volume_context, volume_key
@@ -74,20 +75,31 @@ class GetVolume(OauthHandler):
 class RefreshVolumes(TaskHandler):
     @ndb.tasklet
     def volume_issues(self, volume):
-        issues = yield Issue.query(ancestor=volume.key).fetch_async()
-        issue_ids = [issue.identifier for issue in issues]
+        volume_issues = yield issues.Issue.query(
+            ancestor=volume.key).fetch_async()
+        issue_ids = [issue.identifier for issue in volume_issues]
         raise ndb.Return({
             'volume': volume.identifier,
             'volume_key': volume.key,
             'ds_issues': issue_ids,
         })
 
+    def fetch_issues(self, volume, limit=100):
+        issues = volume.get('issues', [])
+        if not issues:
+            last_page = math.ceil(1.0*volume['count_of_issues']/limit)
+            for page in range(int(last_page)):
+                issue_page = self.cv.fetch_issue_batch(
+                    [volume['id']], filter_attr='volume', page=page)
+                issues.extend(issue_page)
+        return issues
+
     def get(self, shard_count=None, shard=None):
         if not shard_count:
             # When run from cron cycle over all issues weekly
             shard_count=24 * 7
             shard=datetime.today().hour + 24 * date.today().weekday()
-        cv = comicvine.load()
+        self.cv = comicvine.load()
         query = Volume.query(Volume.shard==int(shard))
         results = query.map(self.volume_issues)
         sharded_ids = [result['volume'] for result in results]
@@ -97,11 +109,11 @@ class RefreshVolumes(TaskHandler):
         cv_volumes = []
         for index in range(0, len(sharded_ids), 100):
             volume_page = sharded_ids[index:min(index+100, len(sharded_ids))]
-            cv_volumes.extend(cv.fetch_volume_batch(volume_page))
+            cv_volumes.extend(self.cv.fetch_volume_batch(volume_page))
         for comicvine_volume in cv_volumes:
             logging.debug('checking for new issues in %r', comicvine_volume)
             comicvine_id = comicvine_volume['id']
-            comicvine_issues = comicvine_volume.get('issues', [])
+            comicvine_issues = self.fetch_issues(comicvine_volume)
             volume_detail[int(comicvine_id)]['cv_issues'] = comicvine_issues
             volumes.volume_key(comicvine_volume, create=False, reindex=True)
         new_issues = []
@@ -110,7 +122,7 @@ class RefreshVolumes(TaskHandler):
                 if int(issue['id']) not in detail['ds_issues']:
                     new_issues.append((issue, detail['volume_key']))
         for issue, volume_key in new_issues:
-            issue_key(issue, volume_key=volume_key)
+            issues.issue_key(issue, volume_key=volume_key)
         status = 'Updated %d volumes. Found %d new issues' % (
             len(sharded_ids), len(new_issues)
         )
