@@ -78,6 +78,7 @@ class ReshardIssues(TaskHandler):
         if not self.request.get('all'):
             query = query.filter(Issue.shard == -1)
         results = query.map(callback)
+        logging.info('Resharded %d issues' % len(results))
         self.response.write(json.dumps({
             'status': 200,
             'message': '%d issues resharded' % len(results),

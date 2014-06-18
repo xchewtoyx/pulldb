@@ -147,6 +147,7 @@ class ReshardVolumes(TaskHandler):
         if not self.request.get('all'):
             query = query.filter(Volume.shard == -1)
         results = query.map(callback)
+        logging.info('Resharded %d volumes' % len(results))
         self.response.write(json.dumps({
             'status': 200,
             'message': '%d volumes resharded' % len(results),
