@@ -145,6 +145,29 @@ class NewIssues(OauthHandler):
         }
         self.response.write(json.dumps(result))
 
+class UnreadIssues(OauthHandler):
+    @ndb.tasklet
+    def fetch_issue_data(self, pull):
+        volume_key = ndb.Key(volumes.Volume, pull.key.parent().id())
+        issue_key = ndb.Key(issues.Issue, pull.key.id(), parent=volume_key)
+        volume, issue = yield volume_key.get_async(), issue_key.get_async()
+        raise ndb.Return({
+            'pull': model_to_dict(pull),
+            'issue': model_to_dict(issue),
+            'volume': model_to_dict(volume),
+        })
+
+    def get(self):
+        user_key = users.user_key(self.user)
+        query = pulls.Pull.query(ancestor=user_key).filter(
+            pulls.Pull.read == False)
+        unread_pulls = query.map(self.fetch_issue_data)
+        result = {
+            'status': 200,
+            'results': unread_pulls,
+        }
+        self.response.write(json.dumps(result))
+
 class UpdatePulls(OauthHandler):
     def post(self):
         user_key = users.user_key(self.user)
@@ -214,6 +237,10 @@ app = create_app([
     Route(
         '/api/pulls/new',
         'pulldb.api.pulls.NewIssues',
+    ),
+    Route(
+        '/api/pulls/unread',
+        'pulldb.api.pulls.UnreadIssues',
     ),
     Route(
         '/api/pulls/update',
