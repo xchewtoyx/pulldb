@@ -19,9 +19,28 @@ from pulldb.models.volumes import refresh_volume_shard
 
 class GetVolume(OauthHandler):
     def get(self, identifier):
-        query = Volume.query(Volume.identifier==int(identifier))
-        results = query.map(volume_context)
-        self.response.write(JsonModel().encode(list(results)))
+        volume_key = ndb.Key(Volume, identifier)
+        volume = volume_key.get()
+        if volume:
+            publisher = volume.publisher.get()
+            volume_dict = volume.to_dict()
+            publisher_dict = publisher.to_dict()
+            response = {
+                'status': 200,
+                'message': 'matching volume found',
+                'volume': {
+                    key: unicode(value) for key, value in volume_dict.items()
+                },
+                'publisher': {
+                    key: unicode(value) for key, value in publisher_dict.items()
+                }
+            }
+        else:
+            response = {
+                'status': 404,
+                'message': 'no matching volume found',
+            }
+        self.response.write(json.dumps(response))
 
 class RefreshVolumes(TaskHandler):
     @ndb.tasklet
