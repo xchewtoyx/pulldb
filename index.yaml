@@ -15,3 +15,15 @@ indexes:
   properties:
   - name: name
     direction: desc
+
+- kind: Issue
+  ancestor: yes
+  properties:
+  - name: pubdate
+    direction: asc
+
+- kind: Issue
+  ancestor: yes
+  properties:
+  - name: pubdate
+    direction: desc

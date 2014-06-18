@@ -1,3 +1,4 @@
+from functools import partial
 import json
 import logging
 
@@ -6,10 +7,9 @@ from google.appengine.ext import ndb
 from pulldb import users
 from pulldb.api.base import OauthHandler, JsonModel
 from pulldb.base import create_app, Route
-from pulldb.models.issues import Issue, issue_key, issue_context
-from pulldb.models.issues import refresh_issue_shard, refresh_issue_volume
+from pulldb.models import issues
 from pulldb.models.pulls import Pull
-from pulldb.models.subscriptions import Subscription
+from pulldb.models import subscriptions
 from pulldb.models import volumes
 from pulldb.models.volumes import Volume
 
@@ -55,6 +55,54 @@ class ListPulls(OauthHandler):
             'results': results,
         }))
 
+class NewIssues(OauthHandler):
+    @ndb.tasklet
+    def check_pulled(self, subscription, issue):
+        pull_key = ndb.Key(Pull, issue.key.id(), parent=subscription.key)
+        pull = yield pull_key.get_async()
+        if not pull:
+            raise ndb.Return(issue)
+
+    @ndb.tasklet
+    def find_new_issues(self, subscription):
+        pull_check_callback = partial(self.check_pulled, subscription)
+        query = issues.Issue.query(
+            ancestor=subscription.volume).filter(
+                issues.Issue.pubdate > subscription.start_date).order(
+                    issues.Issue.pubdate)
+        volume, results = yield (
+            subscription.volume.get_async(),
+            query.map_async(pull_check_callback))
+        if results:
+            raise ndb.Return(
+                subscription,
+                [issue for issue in results if issue]
+            )
+
+    def model_to_dict(self, model):
+        return {
+            key: unicode(value) for key, value in model.to_dict().items()
+        }
+
+    def get(self):
+        user_key = users.user_key(self.user)
+        query = subscriptions.Subscription.query(ancestor=user_key)
+        subs = [sub for sub in query.map(self.find_new_issues) if sub]
+        new_issues = []
+        for subscription, unread in subs:
+            volume = subscription.volume.get()
+            volume_dict = self.model_to_dict(volume)
+            for issue in unread:
+                new_issues.append({
+                    'volume': volume_dict,
+                    'issue': self.model_to_dict(issue),
+                })
+        result = {
+            'status': 200,
+            'results': new_issues,
+        }
+        self.response.write(json.dumps(result))
+
 app = create_app([
     Route(
         '/api/pulls/get/<identifier>',
@@ -63,5 +111,9 @@ app = create_app([
     Route(
         '/api/pulls/list',
         'pulldb.api.pulls.ListPulls',
+    ),
+    Route(
+        '/api/pulls/new',
+        'pulldb.api.pulls.NewIssues',
     ),
 ])
