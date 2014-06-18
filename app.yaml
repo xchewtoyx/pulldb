@@ -28,8 +28,11 @@ handlers:
 - url: /subscriptions($|/.*)
   script: pulldb.subscriptions.app
   login: required
-- url: /api/subscriptions($|/.*)
+- url: /api/subscriptions/.*
   script: pulldb.api.subscriptions.app
+- url: /tasks/subscriptions/.*
+  script: pulldb.api.subscriptions.app
+  login: admin
 - url: /users($|/.*)
   script: pulldb.users.app
   login: required
