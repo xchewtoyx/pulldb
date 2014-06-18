@@ -149,7 +149,7 @@ class UnreadIssues(OauthHandler):
     @ndb.tasklet
     def fetch_issue_data(self, pull):
         volume_key = ndb.Key(volumes.Volume, pull.key.parent().id())
-        issue_key = ndb.Key(issues.Issue, pull.key.id(), parent=volume_key)
+        issue_key = pull.issue
         volume, issue = yield volume_key.get_async(), issue_key.get_async()
         raise ndb.Return({
             'pull': model_to_dict(pull),
