@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date, datetime
 from functools import partial
 import json
@@ -14,8 +15,36 @@ from pulldb.models import comicvine
 from pulldb.models.issues import Issue
 from pulldb.models.subscriptions import Subscription
 from pulldb.models import volumes
-from pulldb.models.volumes import Volume, volume_context
+from pulldb.models.volumes import Volume, volume_context, volume_key
 from pulldb.models.volumes import refresh_volume_shard
+
+class AddVolumes(OauthHandler):
+    def post(self):
+        cv = comicvine.load()
+        request = json.loads(self.request.body)
+        volume_ids = request['volumes']
+        results = defaultdict(list)
+        keys = [ndb.Key(Volume, id) for id in volume_ids]
+        ndb.get_multi(keys)
+        candidates = []
+        for key in keys:
+            volume = key.get()
+            if volume:
+                results['existing'].append(key.id())
+            else:
+                candidates.append(int(key.id()))
+        cv_volumes = cv.fetch_volume_batch(candidates)
+        for cv_volume in cv_volumes:
+            key = volumes.volume_key(cv_volume)
+            if key.get():
+                results['added'].append(key.id())
+            else:
+                results['failed'].append(key.id())
+        response = {
+            'status': 200,
+            'results': results
+        }
+        self.response.write(json.dumps(response))
 
 class GetVolume(OauthHandler):
     def get(self, identifier):
@@ -150,6 +179,10 @@ class Validate(TaskHandler):
 
 app = create_app([
     Route(
+        '/api/volumes/add',
+        'pulldb.api.volumes.AddVolumes'
+    ),
+    Route(
         '/api/volumes/get/<identifier>',
         'pulldb.api.volumes.GetVolume'
     ),
@@ -158,12 +191,16 @@ app = create_app([
         'pulldb.api.volumes.RefreshVolumes'
     ),
     Route(
-        '/api/volumes/search',
-        'pulldb.api.volumes.SearchVolumes'
-    ),
-    Route(
         '/tasks/volumes/refresh',
         'pulldb.api.volumes.RefreshVolumes'
+    ),
+    Route(
+        '/tasks/volumes/reshard',
+        'pulldb.api.volumes.ReshardVolumes'
+    ),
+    Route(
+        '/api/volumes/search',
+        'pulldb.api.volumes.SearchVolumes'
     ),
     Route(
         '/tasks/volumes/validate',
