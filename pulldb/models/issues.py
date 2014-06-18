@@ -25,7 +25,7 @@ class Issue(ndb.Model):
   title = ndb.StringProperty()
   site_detail_url = ndb.StringProperty()
   file_path = ndb.StringProperty()
-  shard = ndb.IntegerProperty()
+  shard = ndb.IntegerProperty(default=-1)
 
 @ndb.tasklet
 def refresh_issue_shard(shard, shard_count, subscription, comicvine=None):

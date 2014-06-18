@@ -24,7 +24,7 @@ class Volume(ndb.Model):
   publisher = ndb.KeyProperty(kind=publishers.Publisher)
   site_detail_url = ndb.StringProperty()
   start_year = ndb.IntegerProperty()
-  shard = ndb.IntegerProperty()
+  shard = ndb.IntegerProperty(default=-1)
 
 def volume_key(comicvine_volume, create=True, reindex=False, batch=False):
     if not comicvine_volume:

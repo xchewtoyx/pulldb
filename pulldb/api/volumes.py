@@ -144,6 +144,8 @@ class ReshardVolumes(TaskHandler):
         shards = int(shards_key.value)
         callback = partial(self.reshard_task, shards)
         query = Volume.query()
+        if not self.request.get('all'):
+            query = query.filter(Volume.shard == -1)
         results = query.map(callback)
         self.response.write(json.dumps({
             'status': 200,

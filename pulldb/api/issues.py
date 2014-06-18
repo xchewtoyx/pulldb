@@ -75,6 +75,8 @@ class ReshardIssues(TaskHandler):
         shards = int(shards_key.value)
         callback = partial(self.reshard_task, shards)
         query = Issue.query()
+        if not self.request.get('all'):
+            query = query.filter(Issue.shard == -1)
         results = query.map(callback)
         self.response.write(json.dumps({
             'status': 200,
