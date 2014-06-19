@@ -2,6 +2,8 @@ from collections import defaultdict
 import json
 import logging
 
+from dateutil.parser import parse as parse_date
+
 from google.appengine.api import oauth
 from google.appengine.ext import ndb
 
@@ -56,6 +58,39 @@ class ListSubs(OauthHandler):
         results = query.map(subscription_context)
         self.response.write(JsonModel().encode(list(results)))
 
+class UpdateSubs(OauthHandler):
+    def post(self):
+        user_key = users.user_key(self.user)
+        request = json.loads(self.request.body)
+        updates = request.get('updates', [])
+        results = defaultdict(list)
+        sub_keys = [
+            ndb.Key(Subscription, key, parent=user_key) for key in updates
+        ]
+        # bulk fetch to populate the cache
+        ndb.get_multi(sub_keys)
+        updated_subs = []
+        for key in sub_keys:
+            subscription = key.get()
+            if subscription:
+                start_date = parse_date(updates.get(key.id())).date()
+                if start_date == subscription.start_date:
+                    results['skipped'].append(key.id())
+                else:
+                    subscription.start_date = start_date
+                    updated_subs.append(subscription)
+                    results['updated'].append(key.id())
+            else:
+                # no such subscription
+                logging.debug('Not subscribed to volume %r', key)
+                results['failed'].append(key.id())
+        ndb.put_multi(updated_subs)
+        response = {
+            'status': 200,
+            'results': results
+        }
+        self.response.write(json.dumps(response))
+
 class Validate(TaskHandler):
     @ndb.tasklet
     def drop_invalid(self, subscription):
@@ -80,5 +115,6 @@ app = create_app([
         'pulldb.api.subscriptions.AddSubscriptions',
     ),
     Route('/api/subscriptions/list', 'pulldb.api.subscriptions.ListSubs'),
+    Route('/api/subscriptions/update', 'pulldb.api.subscriptions.UpdateSubs'),
     Route('/tasks/subscriptions/validate', 'pulldb.api.subscriptions.Validate'),
 ])
