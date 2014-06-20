@@ -2,20 +2,26 @@ cron:
 - description: Refresh volues from comicvine daily
   target: batch
   url: /tasks/volumes/refresh
-  schedule: every 60 minutes
+  schedule: every 60 minutes from 00:15 to 23:30
 - description: Reshard new volumes
   target: batch
   url: /tasks/volumes/reshard
-  schedule: every 2 hours
+  schedule: every 60 minutes from 00:20 to 23:30
+- description: Reindex volumes
+  url: /tasks/volumes/reindex
+  schedule: every 60 minutes from 00:25 to 23:30
 - description: Refresh issues hourly
   target: batch
   url: /tasks/issues/refresh
-  schedule: every 60 minutes
+  schedule: every 60 minutes from 00:16 to 23:30
 - description: Reshard new issues
   target: batch
   url: /tasks/issues/reshard
-  schedule: every 2 hours
+  schedule: every 60 minutes from 00:21 to 23:30
+- description: Reindex issues
+  url: /tasks/issues/reindex
+  schedule: every 60 minutes from 00:26 to 23:30
 - description: Fetch todays new comics
   target: batch
   url: /tasks/issues/fetchnew
-  schedule: every 6 hours
+  schedule: every 6 hours from 02:00 to 21:00
