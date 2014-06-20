@@ -9,7 +9,7 @@ cron:
   schedule: every 60 minutes from 00:20 to 23:30
 - description: Reindex volumes
   url: /tasks/volumes/reindex
-  schedule: every 60 minutes from 00:25 to 23:30
+  schedule: every 60 minutes from 00:22 to 23:30
 - description: Refresh issues hourly
   target: batch
   url: /tasks/issues/refresh
@@ -20,7 +20,7 @@ cron:
   schedule: every 60 minutes from 00:21 to 23:30
 - description: Reindex issues
   url: /tasks/issues/reindex
-  schedule: every 60 minutes from 00:26 to 23:30
+  schedule: every 60 minutes from 00:23 to 23:30
 - description: Fetch todays new comics
   target: batch
   url: /tasks/issues/fetchnew
