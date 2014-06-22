@@ -27,3 +27,13 @@ indexes:
   properties:
   - name: pubdate
     direction: desc
+
+- kind: Issue
+  properties:
+  - name: shard
+  - name: volume
+
+- kind: Issue
+  properties:
+  - name: volume
+  - name: pubdate
