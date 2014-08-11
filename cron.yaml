@@ -1,31 +1,88 @@
 cron:
-- description: Refresh volues from comicvine daily
-  target: batch
-  url: /tasks/volumes/refresh
-  schedule: every 60 minutes from 00:15 to 23:30
-- description: Reshard new volumes
-  target: batch
-  url: /tasks/volumes/reshard
-  schedule: every 60 minutes from 00:20 to 23:30
-- description: Reindex volumes
-  url: /tasks/volumes/reindex
-  schedule: every 60 minutes from 00:20 to 23:30
-- description: Refresh issues hourly
-  target: batch
-  url: /tasks/issues/refresh
-  schedule: every 60 minutes from 00:15 to 23:30
-- description: Reshard new issues
-  target: batch
-  url: /tasks/issues/reshard
-  schedule: every 60 minutes from 00:20 to 23:30
-- description: Reindex issues
-  url: /tasks/issues/reindex
-  schedule: every 60 minutes from 00:20 to 23:30
+
+# Fetch new resources from comicvine on the quarter hour
+
 - description: Fetch todays new comics
   target: batch
   url: /tasks/issues/fetchnew
   schedule: every 6 hours from 02:15 to 22:15
-- description: Add pulls for new issues
+
+- description: Refresh all volumes hourly sharded over a week
+  target: batch
+  url: /tasks/volumes/refresh
+  schedule: every 60 minutes from 00:15 to 23:30
+
+- description: Refresh active volumes from comicvine daily
+  target: batch
+  url: /tasks/volumes/refresh/active
+  schedule: every 60 minutes from 00:15 to 23:30
+
+- description: Refresh issues hourly
+  target: batch
+  url: /tasks/issues/refresh
+  schedule: every 60 minutes from 00:15 to 23:30
+
+# Perform validity checks on resources
+
+- description: Check pull consistency
+  target: batch
+  url: /tasks/pulls/refresh
+  schedule: every 60 minutes from 00:15 to 23:30
+
+# Stream maintenance
+
+- description: Check subscriptions for new issues
   target: batch
   url: /tasks/subscriptions/update
-  schedule: every 6 hours from 02:20 to 22:20
+  schedule: every 60 minutes from 00:15 to 23:30
+
+- description: Assign pulls to streams
+  target: batch
+  url: /tasks/pulls/update/streams
+  schedule: every 60 minutes from 00:17 to 23:30
+
+- description: Update stream counts
+  target: batch
+  url: /tasks/streams/updatecounts
+  schedule: every 60 minutes from 00:19 to 23:30
+
+- description: Update pull weights
+  target: batch
+  url: /tasks/streams/updateweights
+  schedule: every 60 minutes from 00:21 to 23:30
+
+# Kick off reindexing a little after the tasks to fetch new resources
+
+- description: Reindex issues
+  target: batch
+  url: /tasks/issues/reindex
+  schedule: every 60 minutes from 00:21 to 23:30
+
+- description: Reindex volumes
+  target: batch
+  url: /tasks/volumes/reindex
+  schedule: every 60 minutes from 00:21 to 23:30
+
+# reshard towards the end of the window to make sure everything
+# is correctly sharded for the next run
+
+- description: Reshard subscriptions
+  target: batch
+  url: /tasks/subscriptions/reshard
+  schedule: every 60 minutes from 00:22 to 23:30
+
+- description: Reshard pulls
+  target: batch
+  url: /tasks/pulls/reshard
+  schedule: every 60 minutes from 00:22 to 23:30
+
+- description: Reshard new issues
+  target: batch
+  url: /tasks/issues/reshard
+  schedule: every 60 minutes from 00:22 to 23:30
+
+- description: Reshard new volumes
+  target: batch
+  url: /tasks/volumes/reshard
+  schedule: every 60 minutes from 00:22 to 23:30
+
