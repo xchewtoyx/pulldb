@@ -25,6 +25,17 @@ indexes:
   properties:
   - name: pubdate
     direction: desc
+# Arc List
+- kind: Issue
+  properties:
+  - name: collection
+  - name: pubdate
+# Arc List
+- kind: Issue
+  properties:
+  - name: collection
+  - name: pubdate
+    direction: desc
 # Shard + volume
 - kind: Issue
   properties:
@@ -47,6 +58,13 @@ indexes:
   properties:
   - name: pulled
   - name: pubdate
+    direction: desc
+
+- kind: Pull
+  ancestor: yes
+  properties:
+  - name: pulled
+  - name: pubdate
 
 - kind: Pull
   ancestor: yes
@@ -61,6 +79,23 @@ indexes:
   - name: pulled
   - name: read
   - name: weight
+
+- kind: Pull
+  ancestor: yes
+  properties:
+  - name: ignored
+  - name: pulled
+  - name: read
+  - name: weight
+
+- kind: Pull
+  ancestor: yes
+  properties:
+  - name: ignored
+  - name: pulled
+  - name: read
+  - name: weight
+    direction: desc
 
 - kind: Pull
   ancestor: yes
@@ -80,6 +115,38 @@ indexes:
   ancestor: yes
   properties:
   - name: weight
+    direction: desc
+
+- kind: Pull
+  ancestor: yes
+  properties:
+  - name: ignored
+  - name: pulled
+  - name: pubdate
+
+- kind: Pull
+  ancestor: yes
+  properties:
+  - name: ignored
+  - name: pulled
+  - name: pubdate
+    direction: desc
+
+# Used by stream stats
+- kind: Pull
+  properties:
+  - name: ignored
+  - name: pulled
+  - name: read
+  - name: stream
+  - name: pubdate
+- kind: Pull
+  properties:
+  - name: ignored
+  - name: pulled
+  - name: read
+  - name: stream
+  - name: pubdate
     direction: desc
 
 # Default volume projection

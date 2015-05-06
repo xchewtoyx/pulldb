@@ -5,7 +5,12 @@ cron:
 - description: Fetch todays new comics
   target: batch
   url: /tasks/issues/fetchnew
-  schedule: every 6 hours from 02:15 to 22:15
+  schedule: every 3 hours from 02:15 to 22:15
+
+- description: Queue arcs hourly sharded over a week
+  target: batch
+  url: /tasks/arcs/queue
+  schedule: every 60 minutes from 00:15 to 23:30
 
 - description: Refresh all volumes hourly sharded over a week
   target: batch
@@ -17,10 +22,15 @@ cron:
   url: /tasks/volumes/refresh/active
   schedule: every 60 minutes from 00:15 to 23:30
 
+- description: Refresh queued arcs hourly sharded over a week
+  target: batch
+  url: /tasks/arcs/refresh
+  schedule: every 60 minutes from 00:16 to 23:30
+
 - description: Refresh issues hourly
   target: batch
   url: /tasks/issues/refresh
-  schedule: every 60 minutes from 00:15 to 23:30
+  schedule: every 60 minutes from 00:16 to 23:30
 
 # Perform validity checks on resources
 
@@ -34,12 +44,17 @@ cron:
 - description: Check subscriptions for new issues
   target: batch
   url: /tasks/subscriptions/update
-  schedule: every 60 minutes from 00:15 to 23:30
+  schedule: every 60 minutes from 00:17 to 23:30
+
+- description: Check watchlists for new issues
+  target: batch
+  url: /tasks/watches/update
+  schedule: every 60 minutes from 00:17 to 23:30
 
 - description: Assign pulls to streams
   target: batch
   url: /tasks/pulls/update/streams
-  schedule: every 60 minutes from 00:17 to 23:30
+  schedule: every 60 minutes from 00:18 to 23:30
 
 - description: Update stream counts
   target: batch
@@ -49,7 +64,7 @@ cron:
 - description: Update pull weights
   target: batch
   url: /tasks/streams/updateweights
-  schedule: every 60 minutes from 00:21 to 23:30
+  schedule: every 60 minutes from 00:20 to 23:30
 
 # Kick off reindexing a little after the tasks to fetch new resources
 
@@ -61,6 +76,11 @@ cron:
 - description: Reindex volumes
   target: batch
   url: /tasks/volumes/reindex
+  schedule: every 60 minutes from 00:21 to 23:30
+
+- description: Reindex arcs
+  target: batch
+  url: /tasks/arcs/reindex
   schedule: every 60 minutes from 00:21 to 23:30
 
 # reshard towards the end of the window to make sure everything
@@ -85,4 +105,15 @@ cron:
   target: batch
   url: /tasks/volumes/reshard
   schedule: every 60 minutes from 00:22 to 23:30
+
+- description: Reshard new story_arcs
+  target: batch
+  url: /tasks/arcs/reshard
+  schedule: every 60 minutes from 00:22 to 23:30
+
+- description: Reshard new watchlists
+  target: batch
+  url: /tasks/watches/reshard
+  schedule: every 60 minutes from 00:22 to 23:30
+
 
