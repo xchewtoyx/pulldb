@@ -12,24 +12,39 @@ cron:
   url: /tasks/arcs/queue
   schedule: every 60 minutes from 00:15 to 23:30
 
-- description: Refresh all volumes hourly sharded over a week
+- description: Queue issues hourly sharded over 28 days
   target: batch
-  url: /tasks/volumes/refresh
-  schedule: every 60 minutes from 00:15 to 23:30
+  url: /tasks/issues/requeue
+  schedule: every 60 minutes from 00:16 to 23:30
 
-- description: Refresh active volumes from comicvine daily
+- description: Queue volumes hourly sharded over 7 days
   target: batch
-  url: /tasks/volumes/refresh/active
-  schedule: every 60 minutes from 00:15 to 23:30
+  url: /tasks/volumes/requeue
+  schedule: every 60 minutes from 00:16 to 23:30
+
+#- description: Refresh all volumes hourly sharded over a week
+#  target: batch
+#  url: /tasks/volumes/refresh
+#  schedule: every 60 minutes from 00:15 to 23:30
+
+#- description: Refresh active volumes from comicvine daily
+#  target: batch
+#  url: /tasks/volumes/refresh/active
+#  schedule: every 60 minutes from 00:15 to 23:30
 
 - description: Refresh queued arcs hourly sharded over a week
   target: batch
   url: /tasks/arcs/refresh
   schedule: every 60 minutes from 00:16 to 23:30
 
-- description: Refresh issues hourly
+- description: Refresh queued issues hourly
   target: batch
-  url: /tasks/issues/refresh
+  url: /tasks/issues/refresh/batch
+  schedule: every 60 minutes from 00:16 to 23:30
+
+- description: Refresh queued volumes hourly
+  target: batch
+  url: /tasks/volumes/refresh/batch
   schedule: every 60 minutes from 00:16 to 23:30
 
 # Perform validity checks on resources
