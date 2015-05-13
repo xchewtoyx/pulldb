@@ -83,6 +83,13 @@ indexes:
 - kind: Pull
   ancestor: yes
   properties:
+  - name: read
+  - name: stream
+  - name: pubdate
+
+- kind: Pull
+  ancestor: yes
+  properties:
   - name: ignored
   - name: pulled
   - name: read

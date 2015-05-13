@@ -15,12 +15,27 @@ cron:
 - description: Queue issues hourly sharded over 28 days
   target: batch
   url: /tasks/issues/requeue
-  schedule: every 60 minutes from 00:16 to 23:30
+  schedule: every 60 minutes from 00:15 to 23:30
+
+- description: Queue issues with active pulls hourly sharded over 7 days
+  target: batch
+  url: /tasks/pulls/queue/issues
+  schedule: every 60 minutes from 00:15 to 23:30
 
 - description: Queue volumes hourly sharded over 7 days
   target: batch
   url: /tasks/volumes/requeue
-  schedule: every 60 minutes from 00:16 to 23:30
+  schedule: every 60 minutes from 00:15 to 23:30
+
+- description: Queue watched arcs/volumes hourly sharded over a day
+  target: batch
+  url: /tasks/watches/queue/collections
+  schedule: every 60 minutes from 00:15 to 23:30
+
+- description: Queue subscribed volumes hourly sharded over a day
+  target: batch
+  url: /tasks/subscriptions/queue/volumes
+  schedule: every 60 minutes from 00:15 to 23:30
 
 #- description: Refresh all volumes hourly sharded over a week
 #  target: batch
@@ -52,34 +67,34 @@ cron:
 - description: Check pull consistency
   target: batch
   url: /tasks/pulls/refresh
-  schedule: every 60 minutes from 00:15 to 23:30
+  schedule: every 60 minutes from 00:17 to 23:30
 
 # Stream maintenance
 
 - description: Check subscriptions for new issues
   target: batch
   url: /tasks/subscriptions/update
-  schedule: every 60 minutes from 00:17 to 23:30
+  schedule: every 60 minutes from 00:18 to 23:30
 
 - description: Check watchlists for new issues
   target: batch
   url: /tasks/watches/update
-  schedule: every 60 minutes from 00:17 to 23:30
+  schedule: every 60 minutes from 00:18 to 23:30
 
 - description: Assign pulls to streams
   target: batch
   url: /tasks/pulls/update/streams
-  schedule: every 60 minutes from 00:18 to 23:30
+  schedule: every 60 minutes from 00:19 to 23:30
 
 - description: Update stream counts
   target: batch
   url: /tasks/streams/updatecounts
-  schedule: every 60 minutes from 00:19 to 23:30
+  schedule: every 60 minutes from 00:20 to 23:30
 
 - description: Update pull weights
   target: batch
   url: /tasks/streams/updateweights
-  schedule: every 60 minutes from 00:20 to 23:30
+  schedule: every 60 minutes from 00:21 to 23:30
 
 # Kick off reindexing a little after the tasks to fetch new resources
 
